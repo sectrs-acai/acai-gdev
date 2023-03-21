@@ -156,6 +156,7 @@ static int __gdev_open_by_minor(const char* template, const char* name, int mino
 	drmVersionPtr version;
 
 	sprintf(buf, template, DRM_DIR_NAME, minor);
+    printf("gdev: opening: %s\n", buf);
 	if ((fd = open(buf, O_RDWR, 0)) < 0) {
 		return -errno;
 	}
@@ -167,6 +168,7 @@ static int __gdev_open_by_minor(const char* template, const char* name, int mino
 	matched = strcmp(version->name, name) == 0;
 	drmFreeVersion(version);
 	if (matched) {
+        printf("gdev: match for %s: %d\n", buf, fd);
 		return fd;
 	}
 

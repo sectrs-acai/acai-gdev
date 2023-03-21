@@ -286,7 +286,7 @@ std::string ELFFile::programTypeToString(int type)
 
 std::string ELFFile::sectionTypeToString(int type)
 {
-	switch(type)
+	switch((unsigned int) type)
 	{
 	case elf::SHT_NULL:          return "null section";
 	case elf::SHT_PROGBITS:      return "program defined";
