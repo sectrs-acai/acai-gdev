@@ -4,8 +4,8 @@
 
 GDEVDIR	       ?= /usr/local/gdev
 
-CC		= gcc
-CXX		= g++
+CC=$(CROSS_COMPILE)gcc
+CXX=$(CROSS_COMPILE)g++
 CFLAGS		= -O3 -Wall -I $(GDEVDIR)/include -I ../.. -I ../../..
 CXXFLAGS	= -std=c++0x
 

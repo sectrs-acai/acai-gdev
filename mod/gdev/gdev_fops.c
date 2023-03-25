@@ -34,6 +34,8 @@
 #include "gdev_fops.h"
 #include "gdev_ioctl.h"
 
+#define GDEV_HERE printf("[gdev] %s/%s: %d\n", __FILE__, __FUNCTION__, __LINE__)
+
 static int __get_minor(struct file *filp)
 {
 	char *devname = filp->f_path.dentry->d_iname;
@@ -48,6 +50,8 @@ static int gdev_open(struct inode *inode, struct file *filp)
 {
 	int minor;
 	Ghandle handle;
+    GDEV_HERE;
+#if 0
 
 	if ((minor = __get_minor(filp)) < 0) {
 		GDEV_PRINT("Could not find device.\n");
@@ -60,6 +64,7 @@ static int gdev_open(struct inode *inode, struct file *filp)
 	}
 
 	filp->private_data = handle;
+#endif
 	
 	return 0;
 }
@@ -67,6 +72,8 @@ static int gdev_open(struct inode *inode, struct file *filp)
 static int gdev_release(struct inode *inode, struct file *filp)
 {
 	Ghandle handle = filp->private_data;
+    GDEV_HERE;
+#if 0
 
 	if (!handle) {
 		GDEV_PRINT("Device not opened.\n");
@@ -74,6 +81,8 @@ static int gdev_release(struct inode *inode, struct file *filp)
 	}
 
 	return gclose(handle);
+#endif
+    return 0;
 }
 
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,37)
@@ -84,6 +93,8 @@ static int gdev_ioctl
 #endif
 {
 	Ghandle handle = filp->private_data;
+    GDEV_HERE;
+    #if 0
 
 	switch (cmd) {
 	case GDEV_IOCTL_GET_HANDLE: /* this is not Gdev API. */
@@ -142,12 +153,15 @@ static int gdev_ioctl
 		GDEV_PRINT("Ioctl command 0x%x is not supported.\n", cmd);
 		return -EINVAL;
 	}
+    #endif
 
 	return 0;
 }
 
 static int gdev_mmap(struct file *filp, struct vm_area_struct *vma)
 {
+    GDEV_HERE;
+#if 0
 	void *buf;
 	uint32_t size = vma->vm_end - vma->vm_start;
 	unsigned long start = vma->vm_start;
@@ -189,6 +203,8 @@ static int gdev_mmap(struct file *filp, struct vm_area_struct *vma)
 			pfn = vmalloc_to_pfn(buf);
 		return remap_pfn_range(vma, start, pfn, size, PAGE_SHARED);
 	}
+#endif
+    return 0;
 }
 
 struct file_operations gdev_fops = {

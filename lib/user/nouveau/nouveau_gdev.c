@@ -38,6 +38,10 @@
 #include <sys/unistd.h>
 
 #define GDEV_DEVICE_MAX_COUNT 32
+#define GDEV_REMOVE 1
+
+#define GDEV_DEBUG(fmt, ...) printf("[gdev] %s/%s: %d " fmt, __FILE__, __FUNCTION__, __LINE__ ,__VA_ARGS__ )
+#define GDEV_HERE printf("[gdev] %s/%s: %d\n", __FILE__, __FUNCTION__, __LINE__)
 
 struct gdev_device *lgdev; /* local gdev_device structure for user-space scheduling */
 struct gdev_nouveau_ctx_objects {
@@ -84,6 +88,7 @@ void __nouveau_fifo_update_get(struct gdev_ctx *ctx)
 /* query a piece of the device-specific information. */
 int gdev_raw_query(struct gdev_device *gdev, uint32_t type, uint64_t *result)
 {
+    GDEV_PRINT("gdev_raw_query\n");
 	struct nouveau_client *client = (struct nouveau_client *)gdev->priv;
 	struct nouveau_device *dev = (struct nouveau_device *)client->device;
 
@@ -151,28 +156,28 @@ fail:
 static int __gdev_open_by_minor(const char* template, const char* name, int minor)
 {
 	int fd;
-	int matched;
 	char buf[64];
-	drmVersionPtr version;
 
 	sprintf(buf, template, DRM_DIR_NAME, minor);
-    printf("gdev: opening: %s\n", buf);
 	if ((fd = open(buf, O_RDWR, 0)) < 0) {
 		return -errno;
 	}
-
+    #if 0
+    int matched;
+    drmVersionPtr version;
 	if (!(version = drmGetVersion(fd))) {
 		return -ENOSYS;
 	}
-
 	matched = strcmp(version->name, name) == 0;
 	drmFreeVersion(version);
 	if (matched) {
         printf("gdev: match for %s: %d\n", buf, fd);
 		return fd;
 	}
-
 	return -ENODEV;
+    #endif
+
+    return fd;
 }
 
 static int __gdev_open_legacy_by_minor(const char* name, int minor)
@@ -193,9 +198,8 @@ static int __gdev_open_by_ordinal(const char* name, int ordinal)
 	for (i = 64 * 2; i < (64 * 3); ++i) {
 		int fd = 0;
 		if ((fd = __gdev_open_render_by_minor(name, i)) >= 0) {
-			if (count++ == ordinal) {
+                GDEV_DEBUG("found %s %d\n", name, i);
 				return fd;
-			}
 			close(fd);
 		}
 	}
@@ -653,6 +657,7 @@ fail_mem:
 /* allocate a new device memory object. size may be aligned. */
 struct gdev_mem *gdev_raw_mem_alloc(struct gdev_vas *vas, uint64_t size)
 {
+    GDEV_DEBUG("gdev_raw_mem_alloc %lx\n", size);
 	uint32_t flags = NOUVEAU_BO_VRAM;
 
 	if (size <= GDEV_MEM_MAPPABLE_LIMIT)
@@ -664,6 +669,7 @@ struct gdev_mem *gdev_raw_mem_alloc(struct gdev_vas *vas, uint64_t size)
 /* allocate a new host DMA memory object. size may be aligned. */
 struct gdev_mem *gdev_raw_mem_alloc_dma(struct gdev_vas *vas, uint64_t size)
 {
+    GDEV_DEBUG("gdev_raw_mem_alloc_dma %lx\n", size);
 	uint32_t flags = NOUVEAU_BO_GART | NOUVEAU_BO_MAP;
 	return __gdev_raw_mem_alloc(vas, size, flags);
 }

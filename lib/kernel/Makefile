@@ -1,6 +1,6 @@
 # Makefile
 
-CC	= gcc
+CC=$(CROSS_COMPILE)gcc
 TARGET	= libgdev
 CFLAGS	= -O3 -Wall
 GDEVDIR	= /usr/local/gdev

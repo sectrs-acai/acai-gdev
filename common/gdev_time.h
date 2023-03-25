@@ -66,8 +66,8 @@ static inline void gdev_time_stamp(struct gdev_time *ret)
 {
 #ifdef __KERNEL__
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(4,9,0)
-	struct timespec ts;
-	getnstimeofday64(&ts);
+    struct timespec64 ts;
+    ktime_get_real_ts64(&ts);
 	ret->sec = ts.tv_sec;
 	ret->usec = ts.tv_nsec / 1000;
 #else

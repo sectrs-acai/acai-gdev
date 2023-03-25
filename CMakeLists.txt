@@ -1,8 +1,10 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.25.2)
 
 SET(CMAKE_C_FLAGS_RELEASE "-Wall -O2")
 SET(CMAKE_C_FLAGS_DEBUG "-g")
 SET(CMAKE_BUILD_TYPE Release)
+
+set(BUILD_SHARED_LIBS off)
 
 PROJECT(Gdev)
 SET(serial "1.0.0")
@@ -35,11 +37,19 @@ CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/common/gdev_autogen.h.in ${CMAKE_CURR
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_BINARY_DIR})
 
 IF(user)
+    IF(CMAKE_CROSSCOMPILING)
+        message(STATUS "is cross compiling")
+    ELSE()
+        message(STATUS "is not cross compiling")
+        INCLUDE_DIRECTORY_IF_EXISTS(/usr/include/libdrm)
+        INCLUDE_DIRECTORY_IF_EXISTS(/usr/include/libdrm/nouveau)
+        LINK_DIRECTORY_IF_EXISTS(/usr/local/lib/x86_64-linux-gnu)
+    ENDIF()
     INCLUDE_DIRECTORY_IF_EXISTS(/usr/local/include/libdrm)
     INCLUDE_DIRECTORY_IF_EXISTS(/usr/local/include/libdrm/nouveau)
-    INCLUDE_DIRECTORY_IF_EXISTS(/usr/include/libdrm)
-    INCLUDE_DIRECTORY_IF_EXISTS(/usr/include/libdrm/nouveau)
     LINK_DIRECTORY_IF_EXISTS(/usr/local/lib)
+    LINK_DIRECTORY_IF_EXISTS(/usr/local/lib64)
+    LINK_DIRECTORY_IF_EXISTS(/usr/lib)
 ENDIF()
 
 INCLUDE_DIRECTORIES(util)
@@ -52,7 +62,7 @@ ADD_SUBDIRECTORY(cuda)
 ADD_SUBDIRECTORY(lib)
 
 IF(NOT user)
-    ADD_SUBDIRECTORY(mod)
+    #ADD_SUBDIRECTORY(mod)
 ENDIF(NOT user)
 
 IF(use_as)

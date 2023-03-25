@@ -43,7 +43,7 @@
 #include "gdev_device.h"
 #include "gdev_drv.h"
 #include "gdev_fops.h"
-#include "gdev_interface.h"
+// #include "gdev_interface.h"
 #include "gdev_proc.h"
 #include "gdev_sched.h"
 
@@ -138,8 +138,8 @@ static int __gdev_credit_com_thread(void *__data)
 
 	GDEV_PRINT("Gdev#%d compute reserve running\n", gdev->id);
 
-	setup_timer_on_stack(&timer, __gdev_credit_handler, (unsigned long)current);
 
+	setup_timer_on_stack(&timer, __gdev_credit_handler, (unsigned long)current);
 	gdev_time_us(&interval, GDEV_UPDATE_INTERVAL);
 	gdev_time_stamp(&last);
 	effective_jiffies = jiffies;

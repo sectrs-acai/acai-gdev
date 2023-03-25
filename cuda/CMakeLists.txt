@@ -115,3 +115,7 @@ INSTALL(TARGETS ucuda LIBRARY DESTINATION gdev/lib64)
 INSTALL(TARGETS cudump DESTINATION gdev/bin)
 TARGET_LINK_LIBRARIES(ucuda ${ucuda_lib})
 INSTALL(FILES ${ucuda_install_headers} DESTINATION gdev/include)
+
+ADD_LIBRARY(ucuda_static STATIC ${ucuda_src})
+TARGET_LINK_LIBRARIES(ucuda_static ${ucuda_lib})
+INSTALL(TARGETS ucuda_static LIBRARY DESTINATION gdev/lib64)

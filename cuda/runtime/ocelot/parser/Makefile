@@ -2,8 +2,8 @@
 
 #include ../../../API.mk
 
-CC		= gcc
-CXX		= g++
+CC=$(CROSS_COMPILE)gcc
+CXX=$(CROSS_COMPILE)g++
 YACC		= bison
 LEX		= flex
 CFLAGS		= -O3 -Wall -I $(GDEVDIR)/include -I ../..

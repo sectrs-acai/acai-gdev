@@ -3,7 +3,6 @@
 include Driver.mk
 include Extra.mk
 
-CC = gcc
 TARGET = libgdev
 CFLAGS = -O2 -Wall $(EXTRA_CFLAGS)
 LDFLAGS = -Bsymbolic

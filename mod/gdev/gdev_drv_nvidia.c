@@ -25,7 +25,7 @@
 #include "gdev_api.h"
 #include "gdev_device.h"
 #include "gdev_drv.h"
-#include "gdev_interface.h"
+// #include "gdev_interface.h"
 #include "gdev_list.h"
 #include "gdev_nvidia.h"
 #include "gdev_nvidia_fifo.h"

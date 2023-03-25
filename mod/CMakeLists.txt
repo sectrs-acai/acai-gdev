@@ -29,9 +29,13 @@ SET( MODULE_OUTPUT_DIR
     ${CMAKE_BINARY_DIR}/mod/${MODULE_NAME}
    )
 
-SET( KERNEL_DIR
-    "/lib/modules/${CMAKE_SYSTEM_VERSION}/build"
-   )
+if ("$ENV{LINUX_DIR}" STREQUAL "")
+    SET(KERNEL_DIR
+            "/lib/modules/${CMAKE_SYSTEM_VERSION}/build"
+            )
+else()
+    SET(KERNEL_DIR $ENV{LINUX_DIR})
+endif()
 
 FIND_PROGRAM(MAKE_EXECUTABLE make DOC "path to the make executable")
 MARK_AS_ADVANCED(MAKE_EXECUTABLE)

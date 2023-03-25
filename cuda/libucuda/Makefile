@@ -1,6 +1,6 @@
 include API.mk
 
-CC		= gcc
+CC=$(CROSS_COMPILE)gcc
 TARGET		= libucuda
 CUDUMP		= cudump
 GDEVDIR		= /usr/local/gdev

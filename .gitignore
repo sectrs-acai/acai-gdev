@@ -1,0 +1,10 @@
+release
+/mod/gdev/.gdev.mod.cmd
+/mod/gdev/.gdev_drv.o.d
+/mod/gdev/.gdev_drv_nvidia.o.d
+/mod/gdev/.gdev_fops.o.d
+/mod/gdev/.gdev_ioctl.o.d
+/mod/gdev/.gdev_proc.o.d
+/mod/gdev/gdev.mod
+/test/cuda/user/madd/madd_gpu.cubin
+/test/cuda/user/madd/user_test

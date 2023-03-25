@@ -1,6 +1,6 @@
 # Makefile
 
-CC	= gcc
+CC=$(CROSS_COMPILE)gcc
 CFLAGS	= -I/usr/local/gdev/include -L/usr/local/gdev/lib64 -lgdev
 
 SRC  	= $(wildcard ./*.c)

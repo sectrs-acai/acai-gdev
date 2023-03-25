@@ -2,8 +2,8 @@
 
 #include ../../API.mk
 
-CC		= gcc
-CXX		= g++
+CC=$(CROSS_COMPILE)gcc
+CXX=$(CROSS_COMPILE)g++
 TARGET		= hydrazine
 CFLAGS 		= -O3 -Wall -I $(GDEVDIR)/include -I ..
 CXXFLAGS	= -std=c++0x

@@ -1,7 +1,7 @@
 # Makefile
 TARGET	= user_test
 ARCH	= sm_20
-CC	= gcc
+CC=$(CROSS_COMPILE)gcc
 CLANG	= clang -cc1 -nostdsysteminc -triple nvptx-unknown-unknown -fcuda-is-device -emit-llvm
 LLC     = llc -march=nvptx64 -mcpu=$(ARCH)
 PTXAS   = ptxas -arch $(ARCH)
