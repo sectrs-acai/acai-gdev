@@ -40,6 +40,8 @@ IF(user)
     INCLUDE_DIRECTORY_IF_EXISTS(/usr/include/libdrm)
     INCLUDE_DIRECTORY_IF_EXISTS(/usr/include/libdrm/nouveau)
     LINK_DIRECTORY_IF_EXISTS(/usr/local/lib)
+    LINK_DIRECTORY_IF_EXISTS(/usr/lib/x86_64-linux-gnu)
+    LINK_DIRECTORY_IF_EXISTS(/usr/local/lib/x86_64-linux-gnu)
 ENDIF()
 
 INCLUDE_DIRECTORIES(util)

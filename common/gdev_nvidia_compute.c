@@ -222,8 +222,9 @@ int gdev_barrier(struct gdev_ctx *ctx)
 
 	compute->membar(ctx);
 	compute->fence_write(ctx, GDEV_OP_COMPUTE, seq);
-	while (seq != compute->fence_read(ctx, seq));
-
+	while (seq != compute->fence_read(ctx, seq)) {
+        GDEV_PRINT("gdev_barrier: seq != compute->fence_read(ctx, seq)");
+    }
 	return 0;
 }
 

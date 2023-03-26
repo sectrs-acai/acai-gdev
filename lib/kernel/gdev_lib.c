@@ -37,6 +37,8 @@
 #include "gdev_list.h"
 #include "gdev_platform.h"
 
+#define GDEV_HERE print("[fh] %s/%s: %d\n", __FILE__, __FUNCTION__, __LINE__)
+
 struct gdev_map_bo {
 	uint64_t addr;
 	uint32_t size;
@@ -73,6 +75,7 @@ struct gdev_handle *gopen(int minor)
 	char devname[32];
 	struct gdev_handle *h;
 	int fd;
+    GDEV_HERE;
 
 	sprintf(devname, "/dev/gdev%d", minor);
 	if ((fd = open(devname, O_RDWR)) < 0)
@@ -92,6 +95,7 @@ struct gdev_handle *gopen(int minor)
 
 int gclose(struct gdev_handle *h)
 {
+    GDEV_HERE;
 	int fd = h->fd;
 	return close(fd);
 }
@@ -99,6 +103,7 @@ int gclose(struct gdev_handle *h)
 uint64_t gmalloc(struct gdev_handle *h, uint64_t size)
 {
 	struct gdev_ioctl_mem mem;
+    GDEV_HERE;
 	int fd = h->fd;
 
 	mem.size = size;
@@ -112,6 +117,7 @@ uint64_t gfree(struct gdev_handle *h, uint64_t addr)
 {
 	struct gdev_ioctl_mem mem;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	mem.addr = addr;
 	if(ioctl(fd, GDEV_IOCTL_GFREE, &mem))
@@ -126,6 +132,7 @@ void *gmalloc_dma(struct gdev_handle *h, uint64_t size)
 	struct gdev_map_bo *bo;
 	struct gdev_ioctl_mem mem;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	mem.addr = 0; /* will be set via ioctl() */
 	mem.size = size;
@@ -159,6 +166,7 @@ uint64_t gfree_dma(struct gdev_handle *h, void *buf)
 	struct gdev_map_bo *bo;
 	struct gdev_ioctl_mem mem;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	gdev_list_for_each (bo, &h->map_bo_list, list_entry) {
 		if (bo->buf == buf) {
@@ -185,6 +193,7 @@ void *gmap(struct gdev_handle *h, uint64_t addr, uint64_t size)
 	struct gdev_map_bo *bo;
 	void *buf;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	map.addr = addr;
 	map.size = size;
@@ -220,6 +229,7 @@ int gunmap(struct gdev_handle *h, void *buf)
 	struct gdev_map_bo *bo;
 	struct gdev_ioctl_map map;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	gdev_list_for_each (bo, &h->map_bo_list, list_entry) {
 		if (bo->buf == buf) {
@@ -245,6 +255,7 @@ static int __gmemcpy_to_device(struct gdev_handle *h, uint64_t dst_addr, const v
 	uint64_t src_addr = (uint64_t)src_buf;
 	uint64_t dma_addr;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	/* look up if @src_buf is allocated on DMA buffer already. */
 	dma_addr = __gdev_lookup_dma_buf(h, src_addr);
@@ -278,6 +289,7 @@ static int __gmemcpy_from_device(struct gdev_handle *h, void *dst_buf, uint64_t 
 	uint64_t dst_addr = (uint64_t)dst_buf;
 	uint64_t dma_addr;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	/* look up if @dst_buf is allocated on DMA buffer already. */
 	dma_addr = __gdev_lookup_dma_buf(h, dst_addr);
@@ -309,6 +321,7 @@ int gmemcpy(struct gdev_handle *h, uint64_t dst_addr, uint64_t src_addr, uint64_
 {
 	struct gdev_ioctl_dma dma;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	dma.dst_addr = dst_addr;
 	dma.src_addr = src_addr;
@@ -322,6 +335,7 @@ int gmemcpy_async(struct gdev_handle *h, uint64_t dst_addr, uint64_t src_addr, u
 {
 	struct gdev_ioctl_dma dma;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	dma.dst_addr = dst_addr;
 	dma.src_addr = src_addr;
@@ -335,6 +349,7 @@ int glaunch(struct gdev_handle *h, struct gdev_kernel *kernel, uint32_t *id)
 {
 	struct gdev_ioctl_launch launch;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	launch.kernel = kernel;
 	launch.id = id;
@@ -346,6 +361,7 @@ int gsync(struct gdev_handle *h, uint32_t id, struct gdev_time *timeout)
 {
 	struct gdev_ioctl_sync sync;
 	int fd = h->fd;
+    GDEV_HERE;
 
 	sync.id = id;
 	sync.timeout = timeout;
@@ -356,6 +372,7 @@ int gsync(struct gdev_handle *h, uint32_t id, struct gdev_time *timeout)
 int gbarrier(struct gdev_handle *h)
 {
 	int fd = h->fd;
+    GDEV_HERE;
 	return ioctl(fd, GDEV_IOCTL_GBARRIER, NULL);
 }
 
@@ -364,6 +381,7 @@ int gquery(struct gdev_handle *h, uint32_t type, uint64_t *result)
 	struct gdev_ioctl_query q;
 	int fd = h->fd;
 	int ret;
+    GDEV_HERE;
 
 	q.type = type;
 	if ((ret = ioctl(fd, GDEV_IOCTL_GQUERY, &q)))
@@ -378,6 +396,7 @@ int gtune(struct gdev_handle *h, uint32_t type, uint32_t value)
 	struct gdev_ioctl_tune c;
 	int fd = h->fd;
 	int ret;
+    GDEV_HERE;
 
 	c.type = type;
 	c.value = value;
@@ -392,6 +411,7 @@ int gshmget(struct gdev_handle *h, int key, uint64_t size, int flags)
 	struct gdev_ioctl_shm s;
 	int fd = h->fd;
 	int ret;
+    GDEV_HERE;
 
 	s.key = key;
 	s.size = size;
@@ -407,6 +427,7 @@ uint64_t gshmat(struct gdev_handle *h, int id, uint64_t addr, int flags)
 	struct gdev_ioctl_shm s;
 	int fd = h->fd;
 	int ret;
+    GDEV_HERE;
 
 	s.id = id;
 	s.addr = addr;
@@ -422,6 +443,7 @@ int gshmdt(struct gdev_handle *h, uint64_t addr)
 	struct gdev_ioctl_shm s;
 	int fd = h->fd;
 	int ret;
+    GDEV_HERE;
 
 	s.addr = addr;
 	if ((ret = ioctl(fd, GDEV_IOCTL_GSHMDT, &s)))
@@ -435,6 +457,7 @@ int gshmctl(struct gdev_handle *h, int id, int cmd, void *buf)
 	struct gdev_ioctl_shm s;
 	int fd = h->fd;
 	int ret;
+    GDEV_HERE;
 
 	s.id = id;
 	s.cmd = cmd;
@@ -453,6 +476,7 @@ uint64_t gref(struct gdev_handle *hmaster, uint64_t addr, uint64_t size, struct 
 	int fd_master = hmaster->fd;
 	int fd_slave = hslave->fd;
 	int ret;
+    GDEV_HERE;
 
 	if ((ret = ioctl(fd_slave, GDEV_IOCTL_GET_HANDLE, &h)))
 		return ret;
@@ -477,6 +501,7 @@ int gunref(struct gdev_handle *h, uint64_t addr)
 	struct gdev_ioctl_unref r;
 	int fd = h->fd;
 	int ret;
+    GDEV_HERE;
 
 	r.addr = addr;
 	if ((ret = ioctl(fd, GDEV_IOCTL_GUNREF, &r)))
@@ -491,6 +516,7 @@ uint64_t gphysget(struct gdev_handle *h, const void *p)
 	int fd = h->fd;
 	uint64_t p_addr = (uint64_t)p;
 	uint64_t dma_addr;
+    GDEV_HERE;
 
 	dma_addr = __gdev_lookup_dma_buf(h, p_addr);
 	if (dma_addr)
@@ -511,6 +537,7 @@ uint64_t gvirtget(struct gdev_handle *h, const void *p)
 	int fd = h->fd;
 	uint64_t p_addr = (uint64_t)p;
 	uint64_t dma_addr;
+    GDEV_HERE;
 
 	dma_addr = __gdev_lookup_dma_buf(h, p_addr);
 	if (dma_addr)
@@ -531,6 +558,7 @@ int gdevice_count(int* result)
 	char buf[16];
 	int minor = 0;
 	FILE *fp;
+    GDEV_HERE;
 
 	if (!(fp = fopen(fname, "r"))) {
 		*result = minor;

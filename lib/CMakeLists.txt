@@ -37,6 +37,7 @@ file(GLOB usched_src "user/usched/*.c")
 ## include dir
 SET(gdev_inc /usr/local/gdev/include)
 
+
 ## select source
 IF(user)
     MESSAGE(Selected\ User-space!)
@@ -83,11 +84,19 @@ ELSE(user)
         ${PROJECT_BINARY_DIR}/gdev_autogen.h)
 ENDIF(user)
 
+
 INCLUDE_DIRECTORIES(gdev ${gdev_inc})
 ADD_LIBRARY(gdev SHARED ${gdev_src})
 SET_TARGET_PROPERTIES(gdev PROPERTIES VERSION ${serial} SOVERSION ${soserial})
 TARGET_LINK_LIBRARIES(gdev ${link_lib})
 INSTALL(TARGETS gdev LIBRARY DESTINATION gdev/lib64)
+
+
+#INCLUDE_DIRECTORIES(gdev_static ${gdev_inc})
+#ADD_LIBRARY(gdev_static STATIC ${gdev_src})
+#INSTALL(TARGETS gdev_static LIBRARY DESTINATION gdev/lib64)makasdklfj
+#TARGET_LINK_LIBRARIES(gdev_static ${link_lib})
+
 INSTALL(FILES ${gdev_install_headers} DESTINATION gdev/include)
 
 IF(user AND usched)
