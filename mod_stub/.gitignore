@@ -5,3 +5,7 @@ tmp/
 
 
 build
+*.cmd
+*.d
+*.o
+*.mod

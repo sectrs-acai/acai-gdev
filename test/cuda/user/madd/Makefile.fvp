@@ -2,8 +2,8 @@
 TARGET	= user_test
 CC=aarch64-none-linux-gnu-gcc
 NVCC	+= nvcc -arch sm_20 -cubin
-LIBS	+= -lucuda -lgdev
-CFLAGS	+= -L/home/b/2.5bay/mthesis-unsync/projects/trusted-periph/buildconf/gdev/install/gdev/lib/lib64/ -I/home/b/2.5bay/mthesis-unsync/projects/trusted-periph/buildconf/gdev/install/gdev/include/
+LIBS	+= -L/home/armcca/trusted-peripherals/assets/snapshots/aarch64-lib -lucuda -lgdev
+CFLAGS	+= -I/usr/local/gdev/include
 
 nvcc:
 	$(NVCC) -ccbin /usr/local/cuda/bin -o madd_gpu.cubin madd_gpu.cu

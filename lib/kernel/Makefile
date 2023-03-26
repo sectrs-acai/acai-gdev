@@ -2,10 +2,9 @@
 
 CC=$(CROSS_COMPILE)gcc
 TARGET	= libgdev
-CFLAGS	= -O3 -Wall
+CFLAGS	= -O3 -Wall -I../../mod_stub/headers
 GDEVDIR	= /usr/local/gdev
 HEADERS	= gdev_api.h gdev_nvidia_def.h gdev_list.h gdev_time.h
-
 #OBJS 	= $(patsubst %.c,%.o,$(wildcard ./*.c))
 OBJS 	= gdev_lib.o
 ZOMBIE  = $(wildcard ./*~)

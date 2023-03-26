@@ -8,3 +8,16 @@ release
 /mod/gdev/gdev.mod
 /test/cuda/user/madd/madd_gpu.cubin
 /test/cuda/user/madd/user_test
+/.idea/
+/cmake-build-debug/
+/common/.gdev_api.o.cmd
+*.cmd
+/cuda/build/
+/mod/gdev/compile_commands.json
+/mod_stub/gdev/Module.symvers
+/mod_stub/gdev/gdev_stub.ko
+/mod_stub/gdev/modules.order
+/lib/kernel/libgdev.so
+/lib/kernel/libgdev.so.1
+/lib/kernel/libgdev.so.1.0.0
+/lib/kernel/gdev_lib.o

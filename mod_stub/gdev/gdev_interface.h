@@ -100,6 +100,7 @@ static int gdev_drv_write(struct drm_device *drm, struct gdev_drv_vspace *drv_vs
     return 0;
 }
 static int gdev_drv_getdevice(int *count) {
+    *count = 1;
     return 0;
 }
 static int gdev_drv_getdrm(int minor, struct drm_device **pptr) {

@@ -1,13 +1,17 @@
-TARGET := gdev
-$(TARGET)-y := gdev_drv.o gdev_drv_nvidia.o gdev_fops.o gdev_ioctl.o gdev_proc.o
-$(TARGET)-y += gdev_api.o gdev_device.o gdev_sched.o
-$(TARGET)-y += gdev_nvidia.o gdev_nvidia_fifo.o gdev_nvidia_compute.o gdev_nvidia_mem.o gdev_nvidia_shm.o gdev_nvidia_nvc0.o gdev_nvidia_nve4.o
+TARGET := gdev_stub
+# $(TARGET)-y := gdev_drv.o gdev_drv_nvidia.o gdev_fops.o gdev_ioctl.o gdev_proc.o gdev_api_stub.o
+$(TARGET)-y := gdev_drv.o gdev_fops.o gdev_ioctl.o gdev_proc.o gdev_api_stub.o gdev_device_stub.o
+#$(TARGET)-y +=  ../../common/gdev_device.o ../../common/gdev_sched.o
+#$(TARGET)-y += ../../common/gdev_nvidia.o ../../common/gdev_nvidia_fifo.o ../../common/gdev_nvidia_compute.o ../../common/gdev_nvidia_mem.o ../../common/gdev_nvidia_shm.o ../../common/gdev_nvidia_nvc0.o ../../common/gdev_nvidia_nve4.o
+$(TARGET)-y += fh_kernel/fh_kernel.o
 
 obj-m := $(TARGET).o
 ifneq ($(KERNELRELEASE),)
 else
 PWD	:= $(shell pwd)
+VPATH := $(PWD) $(PWD)/../../common $(PWD)/../../util
 endif
+
 
 ifndef LINUX_DIR
 LINUX_DIR	:= /lib/modules/$(shell uname -r)/build
@@ -28,18 +32,25 @@ else
 	KBUILD_EXTRA_SYMBOLS = $(GDEV_INTERFACE)/Module.symvers
 endif
 
-EXTRA_CFLAGS = -Iinclude/drm -I$(GDEV_INTERFACE) -DGDEV_SCHED_DISABLED -Wno-unused-function
+EXTRA_CFLAGS = -Iinclude/drm -I$(GDEV_INTERFACE) -DGDEV_SCHED_DISABLED -Wno-unused-function    -I$(PWD) -I$(PWD)/../../common -I$(PWD)/../../util
 CFLAGS +=
-all:
-	make -C $(SYSSRC) M=$(PWD) modules ENABLE_WARN_DEPRECATED=1 modules
+all: headers
+	$(MAKE) -C $(SYSSRC) M=$(PWD) modules ENABLE_WARN_DEPRECATED=1 modules
 
 clean:
-	+make -C $(SYSSRC) M=$(PWD) clean
+	rm ../../common/*.o || true
+	+$(MAKE) -C $(SYSSRC) M=$(PWD) clean
 	rm -f *~
+
+headers:
+	mkdir -p ../headers
+	cp ../../common/gdev_api.h gdev_autogen.h ../../common/gdev_ioctl_def.h ../../util/gdev_platform.h \
+       	             ../../common/gdev_nvidia_def.h ../../common/gdev_list.h ../../common/gdev_time.h ./fh_kernel/fh_def.h ./gdev_ioctl_debug.h ../headers
+
 
 install: all
 	-sudo rmmod $(TARGET)
-	+sudo make -C $(SYSSRC) M=$(PWD) modules_install
+	+sudo $(MAKE) -C $(SYSSRC) M=$(PWD) modules_install
 	sudo install -o root -m 0755 -d $(GDEVDIR)
 	sudo install -o root -m 0755 -d $(GDEVINC)
 	sudo install -o root -m 0755 -d $(GDEVETC)
