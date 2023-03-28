@@ -116,6 +116,14 @@ struct fh_gdev_ioctl {
         struct fh_ioctl_gfree {
             struct gdev_ioctl_mem req;
         } gfree;
+        struct fh_ioctl_gmalloc_dma {
+            struct gdev_ioctl_mem req;
+            unsigned long buf_pfn_num;
+            unsigned long *buf_pfn; // addr[0] memory following this struct is pages
+        } gmalloc_dma;
+        struct fh_ioctl_gfree_dma {
+            struct gdev_ioctl_mem req;
+        } gfree_dma;
     };
 };
 

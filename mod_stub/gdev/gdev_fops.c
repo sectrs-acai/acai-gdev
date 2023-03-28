@@ -92,8 +92,8 @@ static int gdev_release(struct inode *inode, struct file *filp)
 
 static long gdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #else
-static int gdev_ioctl
-(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
+static int gdev_ioctl(struct inode *inode,
+        struct file *filp, unsigned int cmd, unsigned long arg)
 #endif
 {
     GDEV_PRINT("Ioctl %ld %s.\n", cmd, debug_ioctl_cmd_name(cmd));
@@ -115,25 +115,20 @@ static int gdev_ioctl
         case GDEV_IOCTL_GBARRIER: return gdev_ioctl_gbarrier(filp, handle, arg);
         case GDEV_IOCTL_GMEMCPY_FROM_DEVICE: return gdev_ioctl_gmemcpy_from_device(filp, handle, arg);
         case GDEV_IOCTL_GFREE: return gdev_ioctl_gfree(filp, handle, arg);
+        case GDEV_IOCTL_GMALLOC_DMA: return gdev_ioctl_gmalloc_dma(filp, handle, arg);
+         case GDEV_IOCTL_GFREE_DMA: return gdev_ioctl_gfree_dma(filp, handle, arg);
         // todo
 
             #if 0
         case GDEV_IOCTL_GET_HANDLE: /* this is not Gdev API. */
-            return gdev_ioctl_get_handle(handle, arg);
-        case GDEV_IOCTL_GMALLOC_DMA: return gdev_ioctl_gmalloc_dma(handle, arg);
-        case GDEV_IOCTL_GFREE_DMA: return gdev_ioctl_gfree_dma(handle, arg);
+        return gdev_ioctl_get_handle(handle, arg);
+
         case GDEV_IOCTL_GMAP: return gdev_ioctl_gmap(handle, arg);
         case GDEV_IOCTL_GUNMAP: return gdev_ioctl_gunmap(handle, arg);
-
-        case GDEV_IOCTL_GMEMCPY_TO_DEVICE_ASYNC:
-            return gdev_ioctl_gmemcpy_to_device_async(handle,
-                                                      arg);
-        case GDEV_IOCTL_GMEMCPY_FROM_DEVICE_ASYNC:
-            return gdev_ioctl_gmemcpy_from_device_async(handle,
-                                                        arg);
+        case GDEV_IOCTL_GMEMCPY_TO_DEVICE_ASYNC: return gdev_ioctl_gmemcpy_to_device_async(handle, arg);
+        case GDEV_IOCTL_GMEMCPY_FROM_DEVICE_ASYNC: return gdev_ioctl_gmemcpy_from_device_async(handle, arg);
         case GDEV_IOCTL_GMEMCPY: return gdev_ioctl_gmemcpy(handle, arg);
         case GDEV_IOCTL_GMEMCPY_ASYNC: return gdev_ioctl_gmemcpy_async(handle, arg);
-
         case GDEV_IOCTL_GSHMGET: return gdev_ioctl_gshmget(handle, arg);
         case GDEV_IOCTL_GSHMAT: return gdev_ioctl_gshmat(handle, arg);
         case GDEV_IOCTL_GSHMDT: return gdev_ioctl_gshmdt(handle, arg);
@@ -167,6 +162,8 @@ static int gdev_mmap(struct file *filp, struct vm_area_struct *vma)
     } else {
         buf = (void *) (vma->vm_pgoff << PAGE_SHIFT);
     }
+
+    pr_info("gdev_mmap: %lx\n", buf);
 
     if (size > PAGE_SIZE) {
         char *vmalloc_area_ptr = (char *) buf;

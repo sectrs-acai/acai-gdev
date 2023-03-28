@@ -46,7 +46,6 @@ __used __section("__versions") = {
 	{ 0xda2a1bcc, "cdev_add" },
 	{ 0xe41c478c, "device_create" },
 	{ 0x6626afca, "down" },
-	{ 0xe4bbc1dd, "kimage_voffset" },
 	{ 0x9688de8b, "memstart_addr" },
 	{ 0xbded96ed, "fvp_escape_size" },
 	{ 0x9166fada, "strncpy" },

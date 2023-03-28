@@ -41,11 +41,13 @@ int gdev_ioctl_gsync(struct file *f, Ghandle h, unsigned long arg);
 int gdev_ioctl_gbarrier(struct file *f, Ghandle h, unsigned long arg);
 int gdev_ioctl_gmemcpy_from_device(struct file *f, Ghandle h, unsigned long arg);
 int gdev_ioctl_gfree(struct file *filp, Ghandle handle, unsigned long arg);
+int gdev_ioctl_gmalloc_dma(struct file *filp, Ghandle h, unsigned long arg);
+int gdev_ioctl_gfree_dma(struct file *filp, Ghandle h, unsigned long arg);
 
 int gdev_ioctl_get_handle(Ghandle handle, unsigned long arg);
 
-int gdev_ioctl_gmalloc_dma(Ghandle h, unsigned long arg);
-int gdev_ioctl_gfree_dma(Ghandle h, unsigned long arg);
+
+
 int gdev_ioctl_gmap(Ghandle h, unsigned long arg);
 int gdev_ioctl_gunmap(Ghandle h, unsigned long arg);
 

@@ -38,7 +38,7 @@
 static int fh_gdev_ioctl(
         struct file *filp,
         unsigned long gdev_cmd,
-        char* payload,
+        char *payload,
         unsigned long payload_size)
 {
     int ret = 0;
@@ -50,13 +50,11 @@ static int fh_gdev_ioctl(
     fh_memcpy_escape_buf(fh_ctx, escape->payload, payload, payload_size,
                          sizeof(struct fh_action_common) + sizeof(unsigned long));
     ret = fh_do_escape(fh_ctx, FH_ACTION_IOCTL);
-    if (ret < 0)
-    {
+    if (ret < 0) {
         fh_print("fh_do_escape(gdev cmd: %ld) returned; %d\n", gdev_cmd, ret);
         goto clean_up;
     }
-    if (escape->common.ret < 0)
-    {
+    if (escape->common.ret < 0) {
         ret = escape->common.err_no;
         fh_print("common.ret (gdev cmd: %ld) %d\n", gdev_cmd, ret);
         goto clean_up;
@@ -70,18 +68,18 @@ static int fh_gdev_ioctl(
 }
 
 
-int gdev_ioctl_gtune(struct file *filp, Ghandle  handle, unsigned long arg)
+int gdev_ioctl_gtune(struct file *filp, Ghandle handle, unsigned long arg)
 {
     struct gdev_ioctl_tune c;
-    if (copy_from_user(&c, (void __user *)arg, sizeof(c))) {
-        return -EFAULT;
+    if (copy_from_user(&c, (void __user *) arg, sizeof(c))) {
+        return - EFAULT;
     }
     // return gtune(handle, c.type, c.value);
 
     struct ioctl_tune payload = {0};
     payload.req.type = c.type;
     payload.req.value = c.value;
-    return fh_gdev_ioctl(filp, GDEV_IOCTL_GTUNE, (char*)&payload, sizeof(struct ioctl_tune));
+    return fh_gdev_ioctl(filp, GDEV_IOCTL_GTUNE, (char *) &payload, sizeof(struct ioctl_tune));
 }
 
 int gdev_ioctl_gquery(struct file *filp, Ghandle handle, unsigned long arg)
@@ -89,8 +87,8 @@ int gdev_ioctl_gquery(struct file *filp, Ghandle handle, unsigned long arg)
     int ret;
     struct gdev_ioctl_query q;
 
-    if (copy_from_user(&q, (void __user *)arg, sizeof(q))) {
-        return -EFAULT;
+    if (copy_from_user(&q, (void __user *) arg, sizeof(q))) {
+        return - EFAULT;
     }
     #if 0
     if (gquery(handle, q.type, &q.result)) {
@@ -100,13 +98,13 @@ int gdev_ioctl_gquery(struct file *filp, Ghandle handle, unsigned long arg)
 
     struct ioctl_query p = {0};
     p.req.type = q.type;
-    ret = fh_gdev_ioctl(filp, GDEV_IOCTL_GQUERY, (char*)&p, sizeof(struct ioctl_query));
+    ret = fh_gdev_ioctl(filp, GDEV_IOCTL_GQUERY, (char *) &p, sizeof(struct ioctl_query));
     if (ret < 0) {
         return ret;
     }
     q.result = p.req.result;
-    if (copy_to_user((void __user *)arg, &q, sizeof(q))) {
-        return -EFAULT;
+    if (copy_to_user((void __user *) arg, &q, sizeof(q))) {
+        return - EFAULT;
     }
     return 0;
 }
@@ -115,8 +113,8 @@ int gdev_ioctl_gmalloc(struct file *filp, Ghandle handle, unsigned long arg)
 {
     struct gdev_ioctl_mem m;
     int ret;
-    if (copy_from_user(&m, (void __user *)arg, sizeof(m))) {
-        return -EFAULT;
+    if (copy_from_user(&m, (void __user *) arg, sizeof(m))) {
+        return - EFAULT;
     }
     #if 0
     if (!(m.addr = gmalloc(handle, m.size))) {
@@ -126,35 +124,37 @@ int gdev_ioctl_gmalloc(struct file *filp, Ghandle handle, unsigned long arg)
     {
         struct ioctl_malloc p = {0};
         p.req.size = m.size;
-        ret = fh_gdev_ioctl(filp, GDEV_IOCTL_GMALLOC, (char*)&p, sizeof(struct ioctl_malloc));
+        ret = fh_gdev_ioctl(filp, GDEV_IOCTL_GMALLOC, (char *) &p, sizeof(struct ioctl_malloc));
         if (ret < 0) {
             return ret;
         }
         if (p.req.addr == 0) {
-            return -ENOMEM;
+            return - ENOMEM;
         }
         m.addr = p.req.addr;
+        fh_print("done: 0x%lx=gmalloc(%d)\n", m.addr, p.req.size);
     }
 
-    if (copy_to_user((void __user *)arg, &m, sizeof(m))) {
-        return -EFAULT;
+    if (copy_to_user((void __user *) arg, &m, sizeof(m))) {
+        return - EFAULT;
     }
     return 0;
 }
 
-static int get_pfn_for_kernel_pages(char *buf,
-                                 unsigned long buf_size,
-                                 unsigned long **ret_pfn_buf,
-                                 unsigned long *ret_pfn_buf_num) {
+static int get_pfn_for_vmalloc_buf(char *buf,
+                                   unsigned long buf_size,
+                                   unsigned long **ret_pfn_buf,
+                                   unsigned long *ret_pfn_buf_num)
+{
     unsigned long i = 0;
     const unsigned long pfn_num = DIV_ROUND_UP(buf_size, PAGE_SIZE);
     const unsigned long pfn_alloc_size = pfn_num * sizeof(unsigned long);
     unsigned long *pfn_buf = vmalloc(pfn_alloc_size);
     if (pfn_buf == NULL) {
-        return -ENOMEM;
+        return - ENOMEM;
     }
-    for (i = 0; i < pfn_num; i+= 1) {
-        pfn_buf[i] = virt_to_phys(buf + i * PAGE_SIZE) >> PAGE_SHIFT;
+    for (i = 0; i < pfn_num; i += 1) {
+        pfn_buf[i] = vmalloc_to_pfn(buf + i * PAGE_SIZE);
         pr_info("%ld = %lx\n", i, pfn_buf[i]);
     }
     *ret_pfn_buf_num = pfn_num;
@@ -162,61 +162,61 @@ static int get_pfn_for_kernel_pages(char *buf,
     return 0;
 }
 
+int _debug_pfn_transfer_test(void)
+{
+    return 0;
+}
+
 int gdev_ioctl_gmemcpy_to_device(struct file *filep, Ghandle handle, unsigned long arg)
 {
-    int ret =0;
+    int ret = 0;
     struct gdev_ioctl_dma dma;
-    void *buf;
+    void *buf_vmalloc; /* XXX: the rest of the code assumes this is vmalloced */
 
-    if (copy_from_user(&dma, (void __user *)arg, sizeof(dma))) {
-        return -EFAULT;
+    if (copy_from_user(&dma, (void __user *) arg, sizeof(dma))) {
+        return - EFAULT;
     }
-    if (dma.size > 0x400000) {
-        buf = vmalloc(dma.size);
+    buf_vmalloc = vmalloc(dma.size);
+    if (! buf_vmalloc) {
+        return - ENOMEM;
     }
-	else {
-        buf = kmalloc(dma.size, GFP_KERNEL);
-    }
-	if (!buf) {
-        return -ENOMEM;
-    }
-	if (copy_from_user(buf, (void __user *)dma.src_buf, dma.size)) {
-        return -EFAULT;
+    if (copy_from_user(buf_vmalloc, (void __user *) dma.src_buf, dma.size)) {
+        return - EFAULT;
     }
 
     #if 0
-	ret = gmemcpy_to_device(handle, dma.dst_addr, buf, dma.size);
+    ret = gmemcpy_to_device(handle, dma.dst_addr, buf, dma.size);
     #endif
     {
-        unsigned long i = 0;
-        const unsigned long pfn_num = DIV_ROUND_UP(dma.size, PAGE_SIZE);
-        const unsigned long pfn_alloc_size = pfn_num * sizeof(unsigned long);
-        const unsigned long struct_alloc_size = pfn_alloc_size
-                + sizeof(struct fh_ioctl_memcpy_to_device);
-        struct fh_ioctl_memcpy_to_device *payload = vmalloc(struct_alloc_size);
-        unsigned long *src_pfn_buf = (unsigned long *) &payload->src_buf_pfn;
+        unsigned long *pfn_buf = NULL;
+        unsigned long pfn_num = 0;
+        unsigned long pfn_size = 0;
+        unsigned long payload_size;
+        struct fh_ioctl_memcpy_to_device *payload;
+        unsigned long *payload_pfn_buf;
 
-        pr_info("pfn_num: %ld, pfn alloc: %ld, tot: %lx\n",
-                pfn_num, pfn_alloc_size, struct_alloc_size);
+        ret = get_pfn_for_vmalloc_buf(buf_vmalloc, dma.size, &pfn_buf, &pfn_num);
+        if (ret < 0 || pfn_buf == NULL) {
+            return - ENOMEM;
+        }
+        pfn_size = pfn_num * sizeof(unsigned long);
+        payload_size = pfn_size + sizeof(struct fh_ioctl_memcpy_to_device);
+        payload = vmalloc(payload_size);
 
-        if (payload == NULL || src_pfn_buf == NULL) {
-            return -ENOMEM;
+        if (payload == NULL) {
+            return - ENOMEM;
         }
         payload->req.size = dma.size;
         payload->req.dst_addr = dma.dst_addr;
         payload->src_buf_pfn_num = pfn_num;
 
-        for (i = 0; i < pfn_num; i+= 1) {
-            src_pfn_buf[i] = virt_to_phys(buf + i * PAGE_SIZE) >> PAGE_SHIFT;
-            pr_info("%ld = %lx\n", i, src_pfn_buf[i]);
-        }
-
-        pr_info("pfn_num payload: %ld \n", payload->src_buf_pfn_num);
+        payload_pfn_buf = (unsigned long *) &payload->src_buf_pfn;
+        memcpy(payload_pfn_buf, pfn_buf, pfn_size);
 
         ret = fh_gdev_ioctl(filep,
                             GDEV_IOCTL_GMEMCPY_TO_DEVICE,
-                            (char*)payload,
-                            struct_alloc_size);
+                            (char *) payload,
+                            payload_size);
 
         vfree(payload);
         if (ret < 0) {
@@ -225,12 +225,65 @@ int gdev_ioctl_gmemcpy_to_device(struct file *filep, Ghandle handle, unsigned lo
     }
     ret = 0;
     clean_up:
-	if (dma.size > 0x400000) {
-        vfree(buf);
+    vfree(buf_vmalloc);
+    return ret;
+}
+
+static int vmalloc_payload_for_pfn_escape(
+        char *buf, //must be vmalloc
+        unsigned long buf_size,
+        unsigned long payload_header_size,
+        unsigned long **ret_pfn_buf,
+        unsigned long *ret_pfn_num,
+        void **ret_payload,
+        unsigned long *ret_payload_size
+        )
+{
+    unsigned long *pfn_buf = NULL;
+    unsigned long pfn_num = 0;
+    unsigned long pfn_size = 0;
+    unsigned long payload_size;
+    void *payload = NULL;
+    int ret = 0;
+
+    HERE;
+
+    ret = get_pfn_for_vmalloc_buf(buf, buf_size, &pfn_buf, &pfn_num);
+    HERE;
+    if (ret < 0) {
+        goto clean_up_buf;
     }
-	else {
-        kfree(buf);
+    HERE;
+    if (pfn_buf == NULL) {
+        ret = - EINVAL;
+        goto clean_up_buf;
     }
+    pfn_size = pfn_num * sizeof(unsigned long);
+    payload_size = pfn_size + payload_header_size;
+
+    HERE;
+    pr_info("payload_size: %d\n", payload_size);
+    payload = vmalloc(payload_size);
+    if (payload == NULL) {
+        ret = - ENOMEM;
+        goto clean_up_pfn_buf;
+    }
+    HERE;
+    memset(payload, 0, payload_size);
+    *ret_payload = payload;
+    *ret_payload_size = payload_size;
+    HERE;
+    *ret_pfn_buf = pfn_buf;
+    HERE;
+    *ret_pfn_num = pfn_num;
+    HERE;
+    return 0;
+
+    clean_up_pfn_buf:
+    vfree(pfn_buf);
+
+    clean_up_buf:
+    vfree(buf);
     return ret;
 }
 
@@ -238,19 +291,14 @@ int gdev_ioctl_gmemcpy_from_device(struct file *filp, Ghandle handle, unsigned l
 {
     struct gdev_ioctl_dma dma;
     int ret;
-    void *buf;
+    void *buf_vmalloc;
 
-    if (copy_from_user(&dma, (void __user *)arg, sizeof(dma))) {
-        return -EFAULT;
+    if (copy_from_user(&dma, (void __user *) arg, sizeof(dma))) {
+        return - EFAULT;
     }
-    if (dma.size > 0x400000) {
-        buf = vmalloc(dma.size);
-    }
-    else {
-        buf = kmalloc(dma.size, GFP_KERNEL);
-    }
-    if (!buf) {
-        return -ENOMEM;
+    buf_vmalloc = vmalloc(dma.size);
+    if (! buf_vmalloc) {
+        return - ENOMEM;
     }
     #if 0
     ret = gmemcpy_from_device(handle, buf, dma.src_addr, dma.size);
@@ -258,61 +306,56 @@ int gdev_ioctl_gmemcpy_from_device(struct file *filp, Ghandle handle, unsigned l
 
     unsigned long *pfn_buf = NULL;
     {
-        unsigned long pfn_buf_num = 0;
-        ret = get_pfn_for_kernel_pages(buf, dma.size, &pfn_buf, &pfn_buf_num);
-        if (ret < 0) {
-            pr_info("get_pfn_for_kernel_pages failed\n");
-            goto clean_up_buf;
+        unsigned long pfn_num = 0;
+        unsigned long pfn_size = 0;
+        unsigned long payload_size;
+        struct fh_ioctl_memcpy_from_device *payload;
+        unsigned long *payload_pfn_buf;
+
+        ret = get_pfn_for_vmalloc_buf(buf_vmalloc, dma.size, &pfn_buf, &pfn_num);
+        if (ret < 0 || pfn_buf == NULL) {
+            return - ENOMEM;
         }
-        const unsigned long pfn_alloc_size = pfn_buf_num * sizeof(unsigned long);
-        const unsigned long struct_alloc_size = pfn_alloc_size
+        pfn_size = pfn_num * sizeof(unsigned long);
+        payload_size = pfn_size
                 + sizeof(struct fh_ioctl_memcpy_from_device);
-        struct fh_ioctl_memcpy_from_device *payload = vmalloc(struct_alloc_size);
+
+        payload = vmalloc(payload_size);
         if (payload == NULL) {
-            ret = -ENOMEM;
+            ret = - ENOMEM;
             goto clean_up_pfn_buf;
         }
-        memset(payload, 0, struct_alloc_size);
+        memset(payload, 0, payload_size);
 
         // user payload
         payload->req.size = dma.size;
         payload->req.src_addr = dma.src_addr;
-        payload->dest_buf_pfn_num = pfn_buf_num;
+        payload->dest_buf_pfn_num = pfn_num;
 
-        pr_info("size: %d bytes, dma.src_addr: %lx, pfn num: %d\n",
-                payload->req.size, payload->req.src_addr, payload->dest_buf_pfn_num);
-
-        unsigned long *payload_pfn_buf = (unsigned long *) &payload->dest_buf_pfn;
-        memcpy(payload_pfn_buf, pfn_buf, pfn_alloc_size);
+        payload_pfn_buf = (unsigned long *) &payload->dest_buf_pfn;
+        memcpy(payload_pfn_buf, pfn_buf, pfn_size);
 
         ret = fh_gdev_ioctl(filp,
                             GDEV_IOCTL_GMEMCPY_FROM_DEVICE,
-                            (char*)payload,
-                            struct_alloc_size);
+                            (char *) payload,
+                            payload_size);
     }
 
     if (ret) {
-        goto clean_up_buf;
+        goto clean_up_pfn_buf;
     }
-    if (copy_to_user((void __user *)dma.dst_buf, buf, dma.size)) {
-        return -EFAULT;
+    if (copy_to_user((void __user *) dma.dst_buf, buf_vmalloc, dma.size)) {
+        return - EFAULT;
     }
 
     ret = 0;
 
     clean_up_pfn_buf:
-    // recycle pfn_buf, not needed anymore
     vfree(pfn_buf);
     pfn_buf = NULL;
 
-    clean_up_buf:
-    if (dma.size > 0x400000) {
-        vfree(buf);
-    }
-    else {
-        kfree(buf);
-    }
-    buf = NULL;
+    vfree(buf_vmalloc);
+    buf_vmalloc = NULL;
     return ret;
 }
 
@@ -323,11 +366,11 @@ int gdev_ioctl_glaunch(struct file *filp, Ghandle handle, unsigned long arg)
     uint32_t id;
     int ret = 0;
 
-    if (copy_from_user(&launch, (void __user *)arg, sizeof(launch))) {
-        return -EFAULT;
+    if (copy_from_user(&launch, (void __user *) arg, sizeof(launch))) {
+        return - EFAULT;
     }
-    if (copy_from_user(&kernel, (void __user *)launch.kernel, sizeof(kernel))) {
-        return -EFAULT;
+    if (copy_from_user(&kernel, (void __user *) launch.kernel, sizeof(kernel))) {
+        return - EFAULT;
     }
     #if 0
     glaunch(handle, &kernel, &id);
@@ -335,23 +378,23 @@ int gdev_ioctl_glaunch(struct file *filp, Ghandle handle, unsigned long arg)
     {
         const unsigned long kernel_param_size = kernel.param_size;
         const unsigned long payload_size = sizeof(struct fh_ioctl_glaunch) + kernel_param_size;
-        uint32_t *kernel_param_buf = NULL;
+        uint32_t * kernel_param_buf = NULL;
         struct fh_ioctl_glaunch *payload = vmalloc(payload_size);
-        if (!payload) {
-            return -ENOMEM;
+        if (! payload) {
+            return - ENOMEM;
         }
         memcpy(&payload->kernel, &kernel, sizeof(struct gdev_kernel));
         payload->kernel_param_size = kernel_param_size;
         kernel_param_buf = (uint32_t *) &payload->kernel_param;
 
         if (copy_from_user(kernel_param_buf,
-                           (void __user *)kernel.param_buf,
+                           (void __user *) kernel.param_buf,
                            kernel_param_size)) {
             vfree(payload);
-            return -EFAULT;
+            return - EFAULT;
         }
 
-        ret = fh_gdev_ioctl(filp, GDEV_IOCTL_GLAUNCH, (char*)payload, payload_size);
+        ret = fh_gdev_ioctl(filp, GDEV_IOCTL_GLAUNCH, (char *) payload, payload_size);
         vfree(payload);
         if (ret < 0) {
             return ret;
@@ -359,8 +402,8 @@ int gdev_ioctl_glaunch(struct file *filp, Ghandle handle, unsigned long arg)
         id = payload->id;
         fh_print("launch id: %d\n", id);
     }
-    if (copy_to_user((void __user *)launch.id, &id, sizeof(id))) {
-        return -EFAULT;
+    if (copy_to_user((void __user *) launch.id, &id, sizeof(id))) {
+        return - EFAULT;
     }
     return 0;
 }
@@ -372,12 +415,12 @@ int gdev_ioctl_gsync(struct file *filp, Ghandle handle, unsigned long arg)
     struct gdev_time timeout = {};
     uint8_t has_timeout = 0;
 
-    if (copy_from_user(&sync, (void __user *)arg, sizeof(sync))) {
-        return -EFAULT;
+    if (copy_from_user(&sync, (void __user *) arg, sizeof(sync))) {
+        return - EFAULT;
     }
     if (sync.timeout) {
-        if (copy_from_user(&timeout, (void __user *)sync.timeout, sizeof(timeout))) {
-            return -EFAULT;
+        if (copy_from_user(&timeout, (void __user *) sync.timeout, sizeof(timeout))) {
+            return - EFAULT;
         }
         has_timeout = 1;
     }
@@ -391,7 +434,10 @@ int gdev_ioctl_gsync(struct file *filp, Ghandle handle, unsigned long arg)
         if (has_timeout) {
             memcpy(&payload.timeout, &timeout, sizeof(timeout));
         }
-        ret = fh_gdev_ioctl(filp, GDEV_IOCTL_GSYNC, (char*)&payload, sizeof(struct fh_ioctl_gsync));
+        ret = fh_gdev_ioctl(filp,
+                            GDEV_IOCTL_GSYNC,
+                            (char *) &payload,
+                            sizeof(struct fh_ioctl_gsync));
         if (ret < 0) {
             return ret;
         }
@@ -399,7 +445,7 @@ int gdev_ioctl_gsync(struct file *filp, Ghandle handle, unsigned long arg)
     return ret;
 }
 
-int gdev_ioctl_gbarrier(struct file* filp, Ghandle handle, unsigned long arg)
+int gdev_ioctl_gbarrier(struct file *filp, Ghandle handle, unsigned long arg)
 {
     #if 0
     return gbarrier(handle);
@@ -412,8 +458,8 @@ int gdev_ioctl_gfree(struct file *filp, Ghandle handle, unsigned long arg)
 {
     struct gdev_ioctl_mem m;
 
-    if (copy_from_user(&m, (void __user *)arg, sizeof(m))) {
-        return -EFAULT;
+    if (copy_from_user(&m, (void __user *) arg, sizeof(m))) {
+        return - EFAULT;
     }
     #if 0
     if (!(m.size = gfree(handle, m.addr))) {
@@ -424,319 +470,416 @@ int gdev_ioctl_gfree(struct file *filp, Ghandle handle, unsigned long arg)
         int ret = 0;
         struct fh_ioctl_gfree payload = {0};
         payload.req.addr = m.addr;
-        ret = fh_gdev_ioctl(filp, GDEV_IOCTL_GFREE, (char*)&payload, sizeof(struct fh_ioctl_gfree));
+        ret = fh_gdev_ioctl(filp,
+                            GDEV_IOCTL_GFREE,
+                            (char *) &payload,
+                            sizeof(struct fh_ioctl_gfree));
         if (ret < 0) {
             return ret;
         }
         if (payload.req.size == 0) {
-            return -ENOMEM;
+            return - ENOMEM;
         }
         m.size = payload.req.size;
     }
-    if (copy_to_user((void __user *)arg, &m, sizeof(m))) {
-        return -EFAULT;
+    if (copy_to_user((void __user *) arg, &m, sizeof(m))) {
+        return - EFAULT;
     }
     return 0;
 }
 
+
+int gdev_ioctl_gmalloc_dma(struct file *filp, Ghandle handle, unsigned long arg)
+{
+    struct gdev_ioctl_mem m;
+
+    if (copy_from_user(&m, (void __user *) arg, sizeof(m))) {
+        return - EFAULT;
+    }
+    #if 0
+    if (!(m.addr = (uint64_t)gmalloc_dma(handle, m.size))) {
+        return -ENOMEM;
+    }
+    #endif
+    {
+        int ret;
+        unsigned long *pfn_buf;
+        unsigned long pfn_num;
+        struct fh_ioctl_gmalloc_dma *payload;
+        unsigned long payload_size;
+        unsigned long pfn_size;
+        unsigned long buf_vmalloc_size = DIV_ROUND_UP(m.size, PAGE_SIZE);
+        pr_info("m.size: %d\n", m.size);
+        void *buf_vmalloc = vmalloc(buf_vmalloc_size);
+        if (! buf_vmalloc) {
+            return - ENOMEM;
+        }
+
+        // ensure no cow page on x86 host
+        memset(buf_vmalloc, 0xFF, buf_vmalloc_size);
+
+
+        ret = vmalloc_payload_for_pfn_escape(buf_vmalloc,
+                                             m.size,
+                                             sizeof(struct fh_ioctl_gmalloc_dma),
+                                             &pfn_buf,
+                                             &pfn_num,
+                                             (void **) &payload,
+                                             &payload_size
+
+        );
+        if (ret < 0) {
+            pr_info("vmalloc_payload_for_pfn_escape failed: %d\n ", ret);
+            return ret;
+        }
+        HERE;
+        pfn_size = sizeof(unsigned long) * pfn_num;
+        if (payload_size != pfn_size + sizeof(struct fh_ioctl_gmalloc_dma)) {
+            pr_info("inconsistent state!\n");
+            return -EINVAL;
+        }
+
+
+        HERE;
+        memcpy(&payload->buf_pfn, pfn_buf, pfn_size);
+        HERE;
+        pr_info("buf_num: %ld, size: %ld\n", pfn_num, m.size);
+        payload->buf_pfn_num = pfn_num;
+        payload->req.size = m.size;
+        payload->req.addr = 0;
+
+        HERE;
+        ret = fh_gdev_ioctl(filp,
+                            GDEV_IOCTL_GMALLOC_DMA,
+                            (char *) payload,
+                            payload_size);
+        if (ret < 0) {
+            return ret;
+        }
+        if (payload->req.addr == 0) {
+            return - ENOMEM;
+        }
+
+        /*
+         * mmap expects: (vma->vm_pgoff << PAGE_SHIFT);
+         */
+        pr_info("buf_vmalloc: %lx\n", (unsigned long)buf_vmalloc);
+        m.addr = ((unsigned long) (buf_vmalloc) >> PAGE_SHIFT);
+        fh_print("done: 0x%lx=gmalloc_dma(%d)\n", m.addr, m.size);
+    }
+
+    if (copy_to_user((void __user *) arg, &m, sizeof(m))) {
+        return - EFAULT;
+    }
+    return 0;
+}
+
+int gdev_ioctl_gfree_dma(struct file *filp, Ghandle handle, unsigned long arg)
+{
+    struct gdev_ioctl_mem m;
+
+    if (copy_from_user(&m, (void __user *) arg, sizeof(m)))
+        return - EFAULT;
+
+    // TODO
+    #if 0
+    if (! (m.size = gfree_dma(handle, (void *) m.addr)))
+        return - ENOENT;
+    #endif
+    #if 0
+    {
+        int ret = 0;
+        struct fh_ioctl_gfree_dma payload = {0};
+        payload.req.addr = m.addr;
+        ret = fh_gdev_ioctl(filp,
+                            GDEV_IOCTL_GFREE_DMA,
+                            (char *) &payload,
+                            sizeof(struct fh_ioctl_gfree_dma));
+        if (ret < 0) {
+            return ret;
+        }
+        if (payload.req.size == 0) {
+            return - ENOMEM;
+        }
+        m.size = payload.req.size;
+    }
+    #endif
+
+    m.size = 32;
+    pr_info("gdev_ioctl_gfree_dma: addr=%lx, size=%lx\n", m.addr, m.size);
+    if (copy_to_user((void __user *) arg, &m, sizeof(m))) {
+        return - EFAULT;
+    }
+    return 0;
+}
+
+
 int gdev_ioctl_get_handle(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_handle h;
+    struct gdev_ioctl_handle h;
 
-	h.handle = (uint64_t)handle;
+    h.handle = (uint64_t) handle;
 
-	if (copy_to_user((void __user *)arg, &h, sizeof(h)))
-		return -EFAULT;
+    if (copy_to_user((void __user *) arg, &h, sizeof(h)))
+        return - EFAULT;
 
-	return 0;
-}
-
-int gdev_ioctl_gmalloc_dma(Ghandle handle, unsigned long arg)
-{
-	struct gdev_ioctl_mem m;
-
-	if (copy_from_user(&m, (void __user *)arg, sizeof(m)))
-		return -EFAULT;
-
-	if (!(m.addr = (uint64_t)gmalloc_dma(handle, m.size)))
-		return -ENOMEM;
-
-	if (copy_to_user((void __user *)arg, &m, sizeof(m)))
-		return -EFAULT;
-
-	return 0;
-}
-
-int gdev_ioctl_gfree_dma(Ghandle handle, unsigned long arg)
-{
-	struct gdev_ioctl_mem m;
-
-	if (copy_from_user(&m, (void __user *)arg, sizeof(m)))
-		return -EFAULT;
-
-	if (!(m.size = gfree_dma(handle, (void*)m.addr)))
-		return -ENOENT;
-
-	if (copy_to_user((void __user *)arg, &m, sizeof(m)))
-		return -EFAULT;
-
-	return 0;
+    return 0;
 }
 
 int gdev_ioctl_gmap(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_map m;
+    struct gdev_ioctl_map m;
 
-	if (copy_from_user(&m, (void __user *)arg, sizeof(m)))
-		return -EFAULT;
+    if (copy_from_user(&m, (void __user *) arg, sizeof(m)))
+        return - EFAULT;
 
-	if (!(m.buf = (uint64_t)gmap(handle, m.addr, m.size)))
-		return -ENOMEM;
+    if (! (m.buf = (uint64_t) gmap(handle, m.addr, m.size)))
+        return - ENOMEM;
 
-	if (copy_to_user((void __user *)arg, &m, sizeof(m)))
-		return -EFAULT;
+    if (copy_to_user((void __user *) arg, &m, sizeof(m)))
+        return - EFAULT;
 
-	return 0;
+    return 0;
 }
 
 int gdev_ioctl_gunmap(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_map m;
+    struct gdev_ioctl_map m;
 
-	if (copy_from_user(&m, (void __user *)arg, sizeof(m)))
-		return -EFAULT;
+    if (copy_from_user(&m, (void __user *) arg, sizeof(m)))
+        return - EFAULT;
 
-	if (gunmap(handle, (void*)m.buf))
-		return -ENOENT;
+    if (gunmap(handle, (void *) m.buf))
+        return - ENOENT;
 
-	return 0;
+    return 0;
 }
 
 
 int gdev_ioctl_gmemcpy_to_device_async(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_dma dma;
-	int ret;
-	int id;
+    struct gdev_ioctl_dma dma;
+    int ret;
+    int id;
 #ifndef GDEV_MEMCPY_USER_DIRECT
-	void *buf;
+    void *buf;
 #endif
 
-	if (copy_from_user(&dma, (void __user *)arg, sizeof(dma)))
-		return -EFAULT;
+    if (copy_from_user(&dma, (void __user *) arg, sizeof(dma)))
+        return - EFAULT;
 
 #ifdef GDEV_MEMCPY_USER_DIRECT
-	ret = gmemcpy_user_to_device_async(handle, dma.dst_addr, dma.src_buf, dma.size, &id);
-	if (ret)
-		return ret;
+    ret = gmemcpy_user_to_device_async(handle, dma.dst_addr, dma.src_buf, dma.size, &id);
+    if (ret)
+        return ret;
 #else
-	if (dma.size > 0x400000)
-		buf = vmalloc(dma.size);
-	else
-		buf = kmalloc(dma.size, GFP_KERNEL);
+    if (dma.size > 0x400000)
+        buf = vmalloc(dma.size);
+    else
+        buf = kmalloc(dma.size, GFP_KERNEL);
 
-	if (!buf)
-		return -ENOMEM;
+    if (!buf)
+        return -ENOMEM;
 
-	if (copy_from_user(buf, (void __user *)dma.src_buf, dma.size))
-		return -EFAULT;
+    if (copy_from_user(buf, (void __user *)dma.src_buf, dma.size))
+        return -EFAULT;
 
-	ret = gmemcpy_to_device_async(handle, dma.dst_addr, buf, dma.size, &id);
-	if (ret)
-		return ret;
+    ret = gmemcpy_to_device_async(handle, dma.dst_addr, buf, dma.size, &id);
+    if (ret)
+        return ret;
 
-	if (dma.size > 0x400000)
-		vfree(buf);
-	else
-		kfree(buf);
+    if (dma.size > 0x400000)
+        vfree(buf);
+    else
+        kfree(buf);
 #endif
 
-	if (copy_to_user((void __user *)dma.id, &id, sizeof(id)))
-		return -EFAULT;
+    if (copy_to_user((void __user *) dma.id, &id, sizeof(id)))
+        return - EFAULT;
 
-	return 0;
+    return 0;
 }
 
 #undef GDEV_MEMCPY_USER_DIRECT
+
 int gdev_ioctl_gmemcpy_from_device_async(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_dma dma;
-	int ret;
-	int id;
+    struct gdev_ioctl_dma dma;
+    int ret;
+    int id;
 #ifndef GDEV_MEMCPY_USER_DIRECT
-	void *buf;
+    void *buf;
 #endif
 
-	if (copy_from_user(&dma, (void __user *)arg, sizeof(dma)))
-		return -EFAULT;
+    if (copy_from_user(&dma, (void __user *) arg, sizeof(dma)))
+        return - EFAULT;
 
 #ifdef GDEV_MEMCPY_USER_DIRECT
-	ret = gmemcpy_user_from_device_async(handle, dma.dst_buf, dma.src_addr, dma.size, &id);
-	if (ret)
-		return ret;
+    ret = gmemcpy_user_from_device_async(handle, dma.dst_buf, dma.src_addr, dma.size, &id);
+    if (ret)
+        return ret;
 #else
-	if (dma.size > 0x400000)
-		buf = vmalloc(dma.size);
-	else
-		buf = kmalloc(dma.size, GFP_KERNEL);
+    if (dma.size > 0x400000)
+        buf = vmalloc(dma.size);
+    else
+        buf = kmalloc(dma.size, GFP_KERNEL);
 
-	if (!buf)
-		return -ENOMEM;
+    if (! buf)
+        return - ENOMEM;
 
-	ret = gmemcpy_from_device_async(handle, buf, dma.src_addr, dma.size, &id);
-	if (ret)
-		return ret;
+    ret = gmemcpy_from_device_async(handle, buf, dma.src_addr, dma.size, &id);
+    if (ret)
+        return ret;
 
-	if (copy_to_user((void __user *)dma.dst_buf, buf, dma.size))
-		return -EFAULT;
+    if (copy_to_user((void __user *) dma.dst_buf, buf, dma.size))
+        return - EFAULT;
 
-	if (dma.size > 0x400000)
-		vfree(buf);
-	else
-		kfree(buf);
+    if (dma.size > 0x400000)
+        vfree(buf);
+    else
+        kfree(buf);
 #endif
 
-	if (copy_to_user((void __user *)dma.id, &id, sizeof(id)))
-		return -EFAULT;
+    if (copy_to_user((void __user *) dma.id, &id, sizeof(id)))
+        return - EFAULT;
 
-	return 0;
+    return 0;
 }
 
 int gdev_ioctl_gmemcpy(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_dma dma;
+    struct gdev_ioctl_dma dma;
 
-	if (copy_from_user(&dma, (void __user *)arg, sizeof(dma)))
-		return -EFAULT;
+    if (copy_from_user(&dma, (void __user *) arg, sizeof(dma)))
+        return - EFAULT;
 
-	return gmemcpy(handle, dma.dst_addr, dma.src_addr, dma.size);
+    return gmemcpy(handle, dma.dst_addr, dma.src_addr, dma.size);
 }
 
 int gdev_ioctl_gmemcpy_async(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_dma dma;
-	int id;
-	int ret;
+    struct gdev_ioctl_dma dma;
+    int id;
+    int ret;
 
-	if (copy_from_user(&dma, (void __user *)arg, sizeof(dma)))
-		return -EFAULT;
+    if (copy_from_user(&dma, (void __user *) arg, sizeof(dma)))
+        return - EFAULT;
 
-	ret = gmemcpy_async(handle, dma.dst_addr, dma.src_addr, dma.size, &id);
-	if (ret)
-		return ret;
+    ret = gmemcpy_async(handle, dma.dst_addr, dma.src_addr, dma.size, &id);
+    if (ret)
+        return ret;
 
-	if (copy_to_user((void __user *)dma.id, &id, sizeof(id)))
-		return -EFAULT;
+    if (copy_to_user((void __user *) dma.id, &id, sizeof(id)))
+        return - EFAULT;
 
-	return 0;
+    return 0;
 }
 
 int gdev_ioctl_gshmget(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_shm s;
+    struct gdev_ioctl_shm s;
 
-	if (copy_from_user(&s, (void __user *)arg, sizeof(s)))
-		return -EFAULT;
+    if (copy_from_user(&s, (void __user *) arg, sizeof(s)))
+        return - EFAULT;
 
-	return gshmget(handle, s.key, s.size, s.flags);
+    return gshmget(handle, s.key, s.size, s.flags);
 }
 
 int gdev_ioctl_gshmat(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_shm s;
+    struct gdev_ioctl_shm s;
 
-	if (copy_from_user(&s, (void __user *)arg, sizeof(s)))
-		return -EFAULT;
+    if (copy_from_user(&s, (void __user *) arg, sizeof(s)))
+        return - EFAULT;
 
-	return gshmat(handle, s.id, s.addr, s.flags);
+    return gshmat(handle, s.id, s.addr, s.flags);
 }
 
 int gdev_ioctl_gshmdt(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_shm s;
+    struct gdev_ioctl_shm s;
 
-	if (copy_from_user(&s, (void __user *)arg, sizeof(s)))
-		return -EFAULT;
+    if (copy_from_user(&s, (void __user *) arg, sizeof(s)))
+        return - EFAULT;
 
-	return gshmdt(handle, s.addr);
+    return gshmdt(handle, s.addr);
 }
 
 int gdev_ioctl_gshmctl(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_shm s;
-	struct shmid_ds ds;
+    struct gdev_ioctl_shm s;
+    struct shmid_ds ds;
 
-	if (copy_from_user(&s, (void __user *)arg, sizeof(s)))
-		return -EFAULT;
+    if (copy_from_user(&s, (void __user *) arg, sizeof(s)))
+        return - EFAULT;
 
-	if (s.buf) {
-		if (copy_from_user(&ds, (void __user *)s.buf, sizeof(ds)))
-			return -EFAULT;
-	}
-	else {
-		memset(&ds, 0, sizeof(ds));
-	}
+    if (s.buf) {
+        if (copy_from_user(&ds, (void __user *) s.buf, sizeof(ds)))
+            return - EFAULT;
+    } else {
+        memset(&ds, 0, sizeof(ds));
+    }
 
-	return gshmctl(handle, s.id, s.cmd, (void *)&ds);
+    return gshmctl(handle, s.id, s.cmd, (void *) &ds);
 }
 
 int gdev_ioctl_gref(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_ref r;
+    struct gdev_ioctl_ref r;
 
-	if (copy_from_user(&r, (void __user *)arg, sizeof(r)))
-		return -EFAULT;
+    if (copy_from_user(&r, (void __user *) arg, sizeof(r)))
+        return - EFAULT;
 
-	if (!(r.addr_slave = gref(handle, r.addr, r.size, (Ghandle)r.handle_slave)))
-		return -EINVAL;
+    if (! (r.addr_slave = gref(handle, r.addr, r.size, (Ghandle) r.handle_slave)))
+        return - EINVAL;
 
-	if (copy_to_user((void __user *)arg, &r, sizeof(r)))
-		return -EFAULT;
+    if (copy_to_user((void __user *) arg, &r, sizeof(r)))
+        return - EFAULT;
 
-	return 0;
+    return 0;
 }
 
 int gdev_ioctl_gunref(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_unref r;
+    struct gdev_ioctl_unref r;
 
-	if (copy_from_user(&r, (void __user *)arg, sizeof(r)))
-		return -EFAULT;
+    if (copy_from_user(&r, (void __user *) arg, sizeof(r)))
+        return - EFAULT;
 
-	if (gunref(handle, r.addr))
-		return -EINVAL;
+    if (gunref(handle, r.addr))
+        return - EINVAL;
 
-	return 0;
+    return 0;
 }
 
 int gdev_ioctl_gphysget(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_phys p;
+    struct gdev_ioctl_phys p;
 
-	if (copy_from_user(&p, (void __user *)arg, sizeof(p)))
-		return -EFAULT;
+    if (copy_from_user(&p, (void __user *) arg, sizeof(p)))
+        return - EFAULT;
 
-	if (!(p.phys = gphysget(handle, (void *)p.addr)))
-		return -EINVAL;
+    if (! (p.phys = gphysget(handle, (void *) p.addr)))
+        return - EINVAL;
 
-	if (copy_to_user((void __user *)arg, &p, sizeof(p)))
-		return -EFAULT;
+    if (copy_to_user((void __user *) arg, &p, sizeof(p)))
+        return - EFAULT;
 
-	return 0;
+    return 0;
 }
 
 int gdev_ioctl_gvirtget(Ghandle handle, unsigned long arg)
 {
-	struct gdev_ioctl_phys p;
+    struct gdev_ioctl_phys p;
 
-	if (copy_from_user(&p, (void __user *)arg, sizeof(p)))
-		return -EFAULT;
+    if (copy_from_user(&p, (void __user *) arg, sizeof(p)))
+        return - EFAULT;
 
-	if (!(p.phys = gvirtget(handle, (void *)p.addr)))
-		return -EINVAL;
+    if (! (p.phys = gvirtget(handle, (void *) p.addr)))
+        return - EINVAL;
 
-	if (copy_to_user((void __user *)arg, &p, sizeof(p)))
-		return -EFAULT;
+    if (copy_to_user((void __user *) arg, &p, sizeof(p)))
+        return - EFAULT;
 
-	return 0;
+    return 0;
 }

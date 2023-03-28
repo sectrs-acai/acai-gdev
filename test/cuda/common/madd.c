@@ -59,7 +59,8 @@ int cuda_test_madd(unsigned int n, char *path)
 	float close_gpu;
 	float data_read;
 
-	unsigned int dummy_b, dummy_c;
+	unsigned int dummy_b, dummy_c = 0;
+	unsigned int dummy_res = 0;
 	
 
 	/* block_x * block_y should not exceed 512. */
@@ -145,15 +146,21 @@ int cuda_test_madd(unsigned int n, char *path)
 	for (i = 0; i < n; i++) {
 		idx = i*n;
 		for(j = 0; j < n; j++) {			
-			a[idx++] = i;
+			a[idx] = i;
+			printf("a[%d] = %d\n", idx, a[idx]);
+			idx++;
 		}
 	}
 	for (i = 0; i < n; i++) {
 		idx = i*n;
 		for(j = 0; j < n; j++) {
-			b[idx++] = i;
+			b[idx] = i;
+			printf("b[%d] = %d\n", idx, b[idx]);
+			idx++;
 		}
 	}
+
+
 
 
 	gettimeofday(&tv_h2d_start, NULL);
@@ -237,7 +244,10 @@ int cuda_test_madd(unsigned int n, char *path)
 	for (i = 0; i < n; i++) {
 		idx = i*n;
 		for(j = 0; j < n; j++) {			
-			dummy_c = c[idx++];
+			dummy_c = c[idx];
+			dummy_res += c[idx];
+			printf("c[%d] = %d\n", idx, c[idx]);
+			idx++;
 		}
 	}
 
@@ -318,6 +328,8 @@ int cuda_test_madd(unsigned int n, char *path)
 	printf("DataRead: %f\n", data_read);
 	printf("Close: %f\n", close_gpu);
 	printf("Total: %f\n", total);
+
+    printf("sum = %lu\n", (unsigned long)dummy_res);
 
 	return 0;
 }
