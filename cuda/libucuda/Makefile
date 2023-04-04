@@ -4,7 +4,8 @@ CC=$(CROSS_COMPILE)gcc
 TARGET		= libucuda
 CUDUMP		= cudump
 GDEVDIR		= /usr/local/gdev
-CFLAGS		= -O3 -Wall -I $(GDEVDIR)/include
+CFLAGS		= -O3 -Wall
+CFLAGS_I    = -I../../common -I../../util
 LDFLAGS		= -L $(GDEVDIR)/lib64 -lgdev -lrt -Wl,-Bsymbolic
 LDFLAGS	       += -Wl,--no-as-needed
 
@@ -94,7 +95,7 @@ $(CUDUMP): $(CUDUMP_OBJS)
 	$(CC) $(LDFLAGS) -o ./$(CUDUMP) $(CUDUMP_OBJS)
 
 %.o:%.c
-	$(CC) -fPIC -c $^ -o $@ $(CFLAGS)
+	$(CC) -fPIC -c $^ -o $@ $(CFLAGS) $(CFLAGS_I)
 
 %.runtime:
 	$(MAKE) -C runtime $(basename $@)
