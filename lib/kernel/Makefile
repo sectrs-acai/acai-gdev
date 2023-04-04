@@ -1,25 +1,30 @@
 # Makefile
 
-CC=$(CROSS_COMPILE)gcc
+CC      ?= $(CROSS_COMPILE)gcc
 TARGET	= libgdev
-CFLAGS	= -O3 -Wall -I../../mod_stub/headers
-GDEVDIR	= /usr/local/gdev
-HEADERS	= gdev_api.h gdev_nvidia_def.h gdev_list.h gdev_time.h
+CFLAGS	+= -O3 -Wall
+GDEVDIR	?= /usr/local/gdev
+HEADERS	= ../../common/gdev_api.h ../../common/gdev_nvidia_def.h ../../common/gdev_list.h ../../common/gdev_time.h ../../common/gdev_ioctl_def.h
+CFLAGS	+=
+
 #OBJS 	= $(patsubst %.c,%.o,$(wildcard ./*.c))
 OBJS 	= gdev_lib.o
 ZOMBIE  = $(wildcard ./*~)
 
 all: $(OBJS)
-	$(CC) -shared -Wl,-soname,$(TARGET).so.1 -o ./$(TARGET).so.1.0.0 $(OBJS) 
+	$(CC) -shared -Wl,-soname,$(TARGET).so.1 -o ./$(TARGET).so.1.0.0 $(OBJS)
+	$(AR) rcs $(TARGET).a $(OBJS)
 
 %.o:%.c
-	$(CC) -fPIC -c $^ -o $@ $(CFLAGS)
+	$(CC) -I./../../common -I./../../util -fPIC -c $^ -o $@
+	echo $(CFLAGS)
 
 install:
-	@if test ! -d $(GDEVDIR) ; then mkdir $(GDEVDIR) ; fi ;
-	@if test ! -d $(GDEVDIR)/lib64 ; then mkdir $(GDEVDIR)/lib64 ; fi ;
-	@if test ! -d $(GDEVDIR)/include ; then mkdir $(GDEVDIR)/include ; fi ;
+	@if test ! -d $(GDEVDIR) ; then mkdir -p $(GDEVDIR) ; fi ;
+	@if test ! -d $(GDEVDIR)/lib64 ; then mkdir -p $(GDEVDIR)/lib64 ; fi ;
+	@if test ! -d $(GDEVDIR)/include ; then mkdir -p $(GDEVDIR)/include ; fi ;
 	cp -f ./$(TARGET).so.1.0.0 $(GDEVDIR)/lib64/
+	cp -f ./$(TARGET).a $(GDEVDIR)/lib64/
 	ln -sf $(GDEVDIR)/lib64/$(TARGET).so.1.0.0 $(GDEVDIR)/lib64/$(TARGET).so.1
 	ln -sf $(GDEVDIR)/lib64/$(TARGET).so.1 $(GDEVDIR)/lib64/$(TARGET).so
 	cp -f $(HEADERS) $(GDEVDIR)/include
@@ -30,7 +35,7 @@ uninstall:
 	rm -f $(GDEVDIR)/include/gdev*.h
 
 clean:
-	rm -f $(TARGET).so.* $(OBJS) $(ZOMBIE)
+	rm -f $(TARGET).so.* $(OBJS) $(ZOMBIE) $(TARGET).a
 
 echo:
 	@echo ---------------------------------------------------------------

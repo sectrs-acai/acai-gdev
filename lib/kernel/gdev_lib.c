@@ -37,7 +37,8 @@
 #include "gdev_list.h"
 #include "gdev_platform.h"
 
-#define GDEV_HERE printf("[fh] %s/%s: %d\n", __FILE__, __FUNCTION__, __LINE__)
+static int gdev_debug = 0;
+#define GDEV_HERE if (gdev_debug) {printf("[fh] %s/%s: %d\n", __FILE__, __FUNCTION__, __LINE__);}
 
 struct gdev_map_bo {
     uint64_t addr;
@@ -75,8 +76,12 @@ struct gdev_handle *gopen(int minor)
     char devname[32];
     struct gdev_handle *h;
     int fd;
-    GDEV_HERE;
 
+    if (getenv("GDEV_DEBUG")) {
+        printf("GDEV_DEBUG=1\n");
+        gdev_debug = 1;
+    }
+    GDEV_HERE;
     sprintf(devname, "/dev/gdev%d", minor);
     if ((fd = open(devname, O_RDWR)) < 0)
         return NULL;
@@ -85,8 +90,8 @@ struct gdev_handle *gopen(int minor)
     h->fd = fd;
     gdev_list_init(&h->map_bo_list, NULL);
 
-    /* chunk size of 0x40000 seems best when using OS runtime. */
-    if (gtune(h, GDEV_TUNE_MEMCPY_CHUNK_SIZE, 0x40000)) {
+    /* XXX: Increase to 0x200000 (2MB) */
+    if (gtune(h, GDEV_TUNE_MEMCPY_CHUNK_SIZE, 0x200000)) {
         return NULL;
     }
 
