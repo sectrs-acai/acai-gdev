@@ -16,6 +16,7 @@ OPTION(usched "enable user mode scheduler(default off)" OFF)
 OPTION(use_as "use assembler(default off)" OFF)
 OPTION(use_llvm "use LLVM compiler(default off)" OFF)
 OPTION(use_open64 "use Open64(nvopencc) compiler(default off)" OFF)
+OPTION(cudump "build cudump" OFF)
 
 MACRO(INCLUDE_DIRECTORY_IF_EXISTS DIR)
     IF(EXISTS "${DIR}/")

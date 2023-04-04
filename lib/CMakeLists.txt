@@ -91,11 +91,10 @@ SET_TARGET_PROPERTIES(gdev PROPERTIES VERSION ${serial} SOVERSION ${soserial})
 TARGET_LINK_LIBRARIES(gdev ${link_lib})
 INSTALL(TARGETS gdev LIBRARY DESTINATION gdev/lib64)
 
-
-#INCLUDE_DIRECTORIES(gdev_static ${gdev_inc})
-#ADD_LIBRARY(gdev_static STATIC ${gdev_src})
-#INSTALL(TARGETS gdev_static LIBRARY DESTINATION gdev/lib64)makasdklfj
-#TARGET_LINK_LIBRARIES(gdev_static ${link_lib})
+INCLUDE_DIRECTORIES(gdev_static ${gdev_inc})
+ADD_LIBRARY(gdev_static STATIC ${gdev_src})
+INSTALL(TARGETS gdev_static LIBRARY DESTINATION gdev/lib64)
+TARGET_LINK_LIBRARIES(gdev_static ${link_lib})
 
 INSTALL(FILES ${gdev_install_headers} DESTINATION gdev/include)
 

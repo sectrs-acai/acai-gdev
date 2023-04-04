@@ -106,12 +106,22 @@ SET(ucuda_install_headers driver/cuda.h )
 
 # execute
 INCLUDE_DIRECTORIES(gdev ${gdev_inc})
+IF(cudump)
 INCLUDE_DIRECTORIES(cudump ${gdev_inc})
-ADD_LIBRARY(ucuda SHARED ${ucuda_src})
 ADD_EXECUTABLE(cudump ${cudump_src})
+INSTALL(TARGETS cudump DESTINATION gdev/bin)
+ENDIF(cudump)
 
+
+ADD_LIBRARY(ucuda SHARED ${ucuda_src})
 SET_TARGET_PROPERTIES(ucuda PROPERTIES VERSION ${serial} SOVERSION ${soserial})
 INSTALL(TARGETS ucuda LIBRARY DESTINATION gdev/lib64)
-INSTALL(TARGETS cudump DESTINATION gdev/bin)
 TARGET_LINK_LIBRARIES(ucuda ${ucuda_lib})
+
+
+ADD_LIBRARY(ucuda_static STATIC ${ucuda_src})
+SET_TARGET_PROPERTIES(ucuda_static PROPERTIES VERSION ${serial} SOVERSION ${soserial})
+INSTALL(TARGETS ucuda_static LIBRARY DESTINATION gdev/lib64)
+TARGET_LINK_LIBRARIES(ucuda_static ${ucuda_lib})
+
 INSTALL(FILES ${ucuda_install_headers} DESTINATION gdev/include)
