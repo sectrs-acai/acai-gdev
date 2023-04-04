@@ -31,6 +31,18 @@
 
 #include "gdev_api.h"
 #include "gdev_ioctl_def.h"
+#include <linux/list.h>
+struct gdev_handle {
+    int escape_handle;
+    struct list_head mmap_head;
+};
+
+
+struct mmap_node {
+    struct list_head list;
+    unsigned long k_buffer; /* kernel heap address that points to device mem */
+    unsigned long usr_space_addr; /* userspace addr in 86 userspace manager */
+};
 
 int gdev_ioctl_gtune(struct file* f, Ghandle h, unsigned long arg);
 int gdev_ioctl_gquery(struct file* f, Ghandle h, unsigned long arg);
@@ -43,6 +55,8 @@ int gdev_ioctl_gmemcpy_from_device(struct file *f, Ghandle h, unsigned long arg)
 int gdev_ioctl_gfree(struct file *filp, Ghandle handle, unsigned long arg);
 int gdev_ioctl_gmalloc_dma(struct file *filp, Ghandle h, unsigned long arg);
 int gdev_ioctl_gfree_dma(struct file *filp, Ghandle h, unsigned long arg);
+int gdev_ioctl_gphysget(struct file *filp, Ghandle h, unsigned long arg);
+int gdev_ioctl_gvirtget(struct file *filp, Ghandle h, unsigned long arg);
 
 int gdev_ioctl_get_handle(Ghandle handle, unsigned long arg);
 
@@ -63,7 +77,7 @@ int gdev_ioctl_gshmdt(Ghandle h, unsigned long arg);
 int gdev_ioctl_gshmctl(Ghandle h, unsigned long arg);
 int gdev_ioctl_gref(Ghandle h, unsigned long arg);
 int gdev_ioctl_gunref(Ghandle h, unsigned long arg);
-int gdev_ioctl_gphysget(Ghandle h, unsigned long arg);
-int gdev_ioctl_gvirtget(Ghandle h, unsigned long arg);
+
+
 
 #endif

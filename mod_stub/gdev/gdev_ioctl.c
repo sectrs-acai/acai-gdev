@@ -33,7 +33,21 @@
 #include "gdev_ioctl.h"
 #include "fh_kernel/fh_def.h"
 
-#define GDEV_MEMCPY_USER_DIRECT
+#include <linux/list.h>
+
+#define pr_info_debug
+
+static struct mmap_node* mmap_node_get_by_kaddr(Ghandle handle, unsigned long kaddr) {
+    struct list_head* list_entry = NULL;
+    struct mmap_node* curr_node;
+    list_for_each(list_entry, &handle->mmap_head){
+        curr_node = list_entry(list_entry, struct mmap_node, list);
+        if (kaddr == curr_node->k_buffer) {
+            return curr_node;
+        }
+    }
+    return NULL;
+}
 
 static int fh_gdev_ioctl(
         struct file *filp,
@@ -47,8 +61,11 @@ static int fh_gdev_ioctl(
     fd_data_lock(fh_ctx);
     escape->common.fd = fop_data->fd;
     escape->gdev_command = gdev_cmd;
-    fh_memcpy_escape_buf(fh_ctx, escape->payload, payload, payload_size,
-                         sizeof(struct fh_action_common) + sizeof(unsigned long));
+    ret = fh_memcpy_escape_buf(fh_ctx, escape->payload, payload, payload_size,
+                         sizeof(struct fh_action_common) + sizeof(unsigned long) /*ioctl */);
+    if (ret < 0) {
+        return ret;
+    }
     ret = fh_do_escape(fh_ctx, FH_ACTION_IOCTL);
     if (ret < 0) {
         fh_print("fh_do_escape(gdev cmd: %ld) returned; %d\n", gdev_cmd, ret);
@@ -61,6 +78,9 @@ static int fh_gdev_ioctl(
     }
     fh_memcpy_escape_buf(fh_ctx, payload, escape->payload, payload_size,
                          sizeof(struct fh_action_common) + sizeof(unsigned long));
+    if (ret < 0) {
+        return ret;
+    }
     ret = 0;
     clean_up:
     fd_data_unlock(fh_ctx);
@@ -132,7 +152,7 @@ int gdev_ioctl_gmalloc(struct file *filp, Ghandle handle, unsigned long arg)
             return - ENOMEM;
         }
         m.addr = p.req.addr;
-        fh_print("done: 0x%lx=gmalloc(%d)\n", m.addr, p.req.size);
+        pr_info_debug("done: 0x%lx=gmalloc(%d)\n", m.addr, p.req.size);
     }
 
     if (copy_to_user((void __user *) arg, &m, sizeof(m))) {
@@ -155,8 +175,10 @@ static int get_pfn_for_vmalloc_buf(char *buf,
     }
     for (i = 0; i < pfn_num; i += 1) {
         pfn_buf[i] = vmalloc_to_pfn(buf + i * PAGE_SIZE);
-        pr_info("%ld = %lx\n", i, pfn_buf[i]);
+        pr_info_debug("%ld = %lx\n", i, pfn_buf[i]);
     }
+    pr_info_debug("translated %d pfn (size: %d bytes on buffer)\n",
+                  pfn_num, pfn_num * sizeof(unsigned long));
     *ret_pfn_buf_num = pfn_num;
     *ret_pfn_buf = pfn_buf;
     return 0;
@@ -245,15 +267,12 @@ static int vmalloc_payload_for_pfn_escape(
     unsigned long payload_size;
     void *payload = NULL;
     int ret = 0;
-
-    HERE;
-
     ret = get_pfn_for_vmalloc_buf(buf, buf_size, &pfn_buf, &pfn_num);
-    HERE;
+
     if (ret < 0) {
         goto clean_up_buf;
     }
-    HERE;
+
     if (pfn_buf == NULL) {
         ret = - EINVAL;
         goto clean_up_buf;
@@ -261,22 +280,19 @@ static int vmalloc_payload_for_pfn_escape(
     pfn_size = pfn_num * sizeof(unsigned long);
     payload_size = pfn_size + payload_header_size;
 
-    HERE;
-    pr_info("payload_size: %d\n", payload_size);
+
+    pr_info_debug("payload_size: %d\n", payload_size);
     payload = vmalloc(payload_size);
     if (payload == NULL) {
         ret = - ENOMEM;
         goto clean_up_pfn_buf;
     }
-    HERE;
+
     memset(payload, 0, payload_size);
     *ret_payload = payload;
     *ret_payload_size = payload_size;
-    HERE;
     *ret_pfn_buf = pfn_buf;
-    HERE;
     *ret_pfn_num = pfn_num;
-    HERE;
     return 0;
 
     clean_up_pfn_buf:
@@ -365,13 +381,14 @@ int gdev_ioctl_glaunch(struct file *filp, Ghandle handle, unsigned long arg)
     struct gdev_kernel kernel;
     uint32_t id;
     int ret = 0;
-
     if (copy_from_user(&launch, (void __user *) arg, sizeof(launch))) {
         return - EFAULT;
     }
+
     if (copy_from_user(&kernel, (void __user *) launch.kernel, sizeof(kernel))) {
         return - EFAULT;
     }
+
     #if 0
     glaunch(handle, &kernel, &id);
     #endif
@@ -393,14 +410,13 @@ int gdev_ioctl_glaunch(struct file *filp, Ghandle handle, unsigned long arg)
             vfree(payload);
             return - EFAULT;
         }
-
         ret = fh_gdev_ioctl(filp, GDEV_IOCTL_GLAUNCH, (char *) payload, payload_size);
-        vfree(payload);
         if (ret < 0) {
+            vfree(payload);
             return ret;
         }
         id = payload->id;
-        fh_print("launch id: %d\n", id);
+        pr_info_debug("launch id: %d\n", id);
     }
     if (copy_to_user((void __user *) launch.id, &id, sizeof(id))) {
         return - EFAULT;
@@ -509,12 +525,11 @@ int gdev_ioctl_gmalloc_dma(struct file *filp, Ghandle handle, unsigned long arg)
         unsigned long payload_size;
         unsigned long pfn_size;
         unsigned long buf_vmalloc_size = DIV_ROUND_UP(m.size, PAGE_SIZE);
-        pr_info("m.size: %d\n", m.size);
+        pr_info_debug("m.size: %d\n", m.size);
         void *buf_vmalloc = vmalloc(buf_vmalloc_size);
         if (! buf_vmalloc) {
             return - ENOMEM;
         }
-
         // ensure no cow page on x86 host
         memset(buf_vmalloc, 0xFF, buf_vmalloc_size);
 
@@ -532,23 +547,16 @@ int gdev_ioctl_gmalloc_dma(struct file *filp, Ghandle handle, unsigned long arg)
             pr_info("vmalloc_payload_for_pfn_escape failed: %d\n ", ret);
             return ret;
         }
-        HERE;
         pfn_size = sizeof(unsigned long) * pfn_num;
         if (payload_size != pfn_size + sizeof(struct fh_ioctl_gmalloc_dma)) {
             pr_info("inconsistent state!\n");
             return -EINVAL;
         }
-
-
-        HERE;
         memcpy(&payload->buf_pfn, pfn_buf, pfn_size);
-        HERE;
-        pr_info("buf_num: %ld, size: %ld\n", pfn_num, m.size);
+        pr_info_debug("buf_num: %ld, size: %ld\n", pfn_num, m.size);
         payload->buf_pfn_num = pfn_num;
         payload->req.size = m.size;
         payload->req.addr = 0;
-
-        HERE;
         ret = fh_gdev_ioctl(filp,
                             GDEV_IOCTL_GMALLOC_DMA,
                             (char *) payload,
@@ -560,12 +568,25 @@ int gdev_ioctl_gmalloc_dma(struct file *filp, Ghandle handle, unsigned long arg)
             return - ENOMEM;
         }
 
+
+        #if 1
+        struct mmap_node *entry = kmalloc(sizeof(struct mmap_node), GFP_KERNEL);
+        if (!entry) {
+            return -ENOMEM;
+        }
+        memset(entry, 0, sizeof(struct mmap_node));
+        entry->k_buffer = (unsigned  long)buf_vmalloc;
+        entry->usr_space_addr = (unsigned long)payload->req.addr;
+        INIT_LIST_HEAD(&entry->list);
+        list_add(&(entry->list),&handle->mmap_head);
+        #endif
+
         /*
          * mmap expects: (vma->vm_pgoff << PAGE_SHIFT);
          */
-        pr_info("buf_vmalloc: %lx\n", (unsigned long)buf_vmalloc);
-        m.addr = ((unsigned long) (buf_vmalloc) >> PAGE_SHIFT);
-        fh_print("done: 0x%lx=gmalloc_dma(%d)\n", m.addr, m.size);
+        pr_info_debug("buf_vmalloc: %lx\n", (unsigned long)buf_vmalloc);
+        m.addr = ((unsigned long) (buf_vmalloc));
+        pr_info_debug("done: 0x%lx=gmalloc_dma(%d)\n", m.addr, m.size);
     }
 
     if (copy_to_user((void __user *) arg, &m, sizeof(m))) {
@@ -574,23 +595,32 @@ int gdev_ioctl_gmalloc_dma(struct file *filp, Ghandle handle, unsigned long arg)
     return 0;
 }
 
+
 int gdev_ioctl_gfree_dma(struct file *filp, Ghandle handle, unsigned long arg)
 {
     struct gdev_ioctl_mem m;
 
-    if (copy_from_user(&m, (void __user *) arg, sizeof(m)))
+    if (copy_from_user(&m, (void __user *) arg, sizeof(m))) {
         return - EFAULT;
+    }
+
+    /* "OS-space" buffer address */
+    // m->addr
+    struct mmap_node *target_node = mmap_node_get_by_kaddr(handle, m.addr);
+    if (target_node == NULL) {
+        pr_info("invalid state: cant find addr for requested addr: %lx\n", m.addr);
+        return -EINVAL;
+    }
 
     // TODO
     #if 0
     if (! (m.size = gfree_dma(handle, (void *) m.addr)))
         return - ENOENT;
     #endif
-    #if 0
     {
         int ret = 0;
         struct fh_ioctl_gfree_dma payload = {0};
-        payload.req.addr = m.addr;
+        payload.req.addr = target_node->usr_space_addr;
         ret = fh_gdev_ioctl(filp,
                             GDEV_IOCTL_GFREE_DMA,
                             (char *) &payload,
@@ -602,11 +632,12 @@ int gdev_ioctl_gfree_dma(struct file *filp, Ghandle handle, unsigned long arg)
             return - ENOMEM;
         }
         m.size = payload.req.size;
-    }
-    #endif
 
-    m.size = 32;
-    pr_info("gdev_ioctl_gfree_dma: addr=%lx, size=%lx\n", m.addr, m.size);
+        list_del(&target_node->list);
+        kfree(target_node);
+    }
+
+    pr_info_debug("gdev_ioctl_gfree_dma: addr=%lx, size=%lx\n", m.addr, m.size);
     if (copy_to_user((void __user *) arg, &m, sizeof(m))) {
         return - EFAULT;
     }
@@ -614,12 +645,74 @@ int gdev_ioctl_gfree_dma(struct file *filp, Ghandle handle, unsigned long arg)
 }
 
 
+
+/*
+ * Passes back the device pointer pdptr corresponding to the mapped, pinned
+ * host buffer p allocated by cuMemHostAlloc.
+ * given an address in userspace, get the device memory address
+ * I need to store a mapping: kernel pointer -> x86 userspace poitner
+ */
+int gdev_ioctl_gvirtget(struct file *filp, Ghandle handle, unsigned long arg)
+{
+    struct gdev_ioctl_phys p;
+
+    if (copy_from_user(&p, (void __user *) arg, sizeof(p))) {
+        return - EFAULT;
+    }
+    struct mmap_node* mmap_node = mmap_node_get_by_kaddr(handle, p.addr);
+    if (mmap_node == NULL) {
+        pr_info("mmap_node_get_by_kaddr no res for req: %lx\n", p.addr);
+        return -EINVAL;
+    }
+
+    #if 0
+    if (! (p.phys = gvirtget(handle, (void *) p.addr))) {
+        return - EINVAL;
+    }
+    #endif
+    int ret = 0;
+    struct fh_ioctl_gvirtget payload = {0};
+    payload.req.addr = mmap_node->usr_space_addr;
+    ret = fh_gdev_ioctl(filp,
+                        GDEV_IOCTL_GVIRTGET,
+                        (char *) &payload,
+                        sizeof(struct fh_ioctl_gvirtget));
+    if (ret < 0) {
+        return ret;
+    }
+    p.phys = payload.req.phys;
+    pr_info_debug("gvirtget: %lx -> %lx -> %lx\n", p.addr, payload.req.addr, p.phys);
+
+    if (copy_to_user((void __user *) arg, &p, sizeof(p))) {
+        return - EFAULT;
+    }
+    return 0;
+}
+
+
+
+int gdev_ioctl_gphysget(struct file *filp, Ghandle handle, unsigned long arg)
+{
+    struct gdev_ioctl_phys p;
+
+    if (copy_from_user(&p, (void __user *) arg, sizeof(p)))
+        return - EFAULT;
+
+    if (! (p.phys = gphysget(handle, (void *) p.addr)))
+        return - EINVAL;
+
+    if (copy_to_user((void __user *) arg, &p, sizeof(p)))
+        return - EFAULT;
+
+    return 0;
+}
+
+
+
 int gdev_ioctl_get_handle(Ghandle handle, unsigned long arg)
 {
     struct gdev_ioctl_handle h;
-
     h.handle = (uint64_t) handle;
-
     if (copy_to_user((void __user *) arg, &h, sizeof(h)))
         return - EFAULT;
 
@@ -848,38 +941,6 @@ int gdev_ioctl_gunref(Ghandle handle, unsigned long arg)
 
     if (gunref(handle, r.addr))
         return - EINVAL;
-
-    return 0;
-}
-
-int gdev_ioctl_gphysget(Ghandle handle, unsigned long arg)
-{
-    struct gdev_ioctl_phys p;
-
-    if (copy_from_user(&p, (void __user *) arg, sizeof(p)))
-        return - EFAULT;
-
-    if (! (p.phys = gphysget(handle, (void *) p.addr)))
-        return - EINVAL;
-
-    if (copy_to_user((void __user *) arg, &p, sizeof(p)))
-        return - EFAULT;
-
-    return 0;
-}
-
-int gdev_ioctl_gvirtget(Ghandle handle, unsigned long arg)
-{
-    struct gdev_ioctl_phys p;
-
-    if (copy_from_user(&p, (void __user *) arg, sizeof(p)))
-        return - EFAULT;
-
-    if (! (p.phys = gvirtget(handle, (void *) p.addr)))
-        return - EINVAL;
-
-    if (copy_to_user((void __user *) arg, &p, sizeof(p)))
-        return - EFAULT;
 
     return 0;
 }

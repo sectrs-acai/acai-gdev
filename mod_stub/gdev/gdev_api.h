@@ -39,9 +39,6 @@
 /* Gdev handle members are not exposed to users. */
 typedef struct gdev_handle* Ghandle;
 
-struct gdev_handle {
-    int escape_handle;
-};
 
 
 /**

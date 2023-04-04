@@ -32,7 +32,7 @@ else
 	KBUILD_EXTRA_SYMBOLS = $(GDEV_INTERFACE)/Module.symvers
 endif
 
-EXTRA_CFLAGS = -Iinclude/drm -I$(GDEV_INTERFACE) -DGDEV_SCHED_DISABLED -Wno-unused-function    -I$(PWD) -I$(PWD)/../../common -I$(PWD)/../../util
+EXTRA_CFLAGS = -Iinclude/drm -I$(GDEV_INTERFACE) -DGDEV_SCHED_DISABLED -Wno-unused-function  -Wno-declaration-after-statement -Wno-format  -I$(PWD) -I$(PWD)/../../common -I$(PWD)/../../util
 CFLAGS +=
 all: headers
 	$(MAKE) -C $(SYSSRC) M=$(PWD) modules ENABLE_WARN_DEPRECATED=1 modules

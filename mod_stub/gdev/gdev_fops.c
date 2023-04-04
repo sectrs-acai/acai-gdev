@@ -67,6 +67,8 @@ static int gdev_open(struct inode *inode, struct file *filp)
     if (ret < 0) {
         fh_print("fh_fop_open failed: %d\n", ret);
     }
+     INIT_LIST_HEAD(&(h->mmap_head));
+
     return ret;
 }
 
@@ -80,6 +82,13 @@ static int gdev_release(struct inode *inode, struct file *filp)
         fh_print("device not opened\n");
         return - ENOENT;
     }
+
+    struct mmap_node *cursor, *temp;
+    list_for_each_entry_safe(cursor, temp, &handle->mmap_head, list) {
+        list_del(&cursor->list);
+        kfree(cursor);
+    }
+
     ret = fh_fop_close(fh_ctx, inode, filp);
     if (ret < 0) {
         fh_print("fh_fop_close failed: %d\n", ret);
@@ -88,24 +97,16 @@ static int gdev_release(struct inode *inode, struct file *filp)
     return ret;
 }
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)
-
-static long gdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
-#else
-static int gdev_ioctl(struct inode *inode,
-        struct file *filp, unsigned int cmd, unsigned long arg)
-#endif
-{
-    GDEV_PRINT("Ioctl %ld %s.\n", cmd, debug_ioctl_cmd_name(cmd));
+static int do_gdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg) {
+    // GDEV_PRINT("Ioctl %ld %s.\n", cmd, debug_ioctl_cmd_name(cmd));
     Ghandle handle = fh_fop_get_private_data(filp);
     if (handle == NULL) {
-        fh_print("No handled stored\n");
+        pr_info("No handled stored\n");
         return -EINVAL;
     }
     //Ghandle handle = filp->private_data;
 
     switch (cmd) {
-        done:
         case GDEV_IOCTL_GTUNE: return gdev_ioctl_gtune(filp, handle, arg);
         case GDEV_IOCTL_GQUERY: return gdev_ioctl_gquery(filp, handle, arg);
         case GDEV_IOCTL_GMALLOC: return gdev_ioctl_gmalloc(filp, handle, arg);
@@ -116,11 +117,10 @@ static int gdev_ioctl(struct inode *inode,
         case GDEV_IOCTL_GMEMCPY_FROM_DEVICE: return gdev_ioctl_gmemcpy_from_device(filp, handle, arg);
         case GDEV_IOCTL_GFREE: return gdev_ioctl_gfree(filp, handle, arg);
         case GDEV_IOCTL_GMALLOC_DMA: return gdev_ioctl_gmalloc_dma(filp, handle, arg);
-         case GDEV_IOCTL_GFREE_DMA: return gdev_ioctl_gfree_dma(filp, handle, arg);
-        // todo
-
-            #if 0
-        case GDEV_IOCTL_GET_HANDLE: /* this is not Gdev API. */
+        case GDEV_IOCTL_GFREE_DMA: return gdev_ioctl_gfree_dma(filp, handle, arg);
+        case GDEV_IOCTL_GVIRTGET: return gdev_ioctl_gvirtget(filp, handle, arg);
+#if 0
+            case GDEV_IOCTL_GET_HANDLE: /* this is not Gdev API. */
         return gdev_ioctl_get_handle(handle, arg);
 
         case GDEV_IOCTL_GMAP: return gdev_ioctl_gmap(handle, arg);
@@ -136,8 +136,7 @@ static int gdev_ioctl(struct inode *inode,
         case GDEV_IOCTL_GREF: return gdev_ioctl_gref(handle, arg);
         case GDEV_IOCTL_GUNREF: return gdev_ioctl_gunref(handle, arg);
         case GDEV_IOCTL_GPHYSGET: return gdev_ioctl_gphysget(handle, arg);
-        case GDEV_IOCTL_GVIRTGET: return gdev_ioctl_gvirtget(handle, arg);
-            #endif
+#endif
         default: GDEV_PRINT("Ioctl command 0x%x is not supported: %s.\n", cmd,
                             debug_ioctl_cmd_name(cmd));
             return - EINVAL;
@@ -145,9 +144,24 @@ static int gdev_ioctl(struct inode *inode,
     return 0;
 }
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 37)
+static long gdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
+#else
+static int gdev_ioctl(struct inode *inode,
+        struct file *filp, unsigned int cmd, unsigned long arg)
+#endif
+{
+    int ret = do_gdev_ioctl(filp, cmd, arg);
+    if (ret < 0){
+        pr_info("do_gdev_ioctl returned %d\n", ret);
+    }
+    return ret;
+}
+
 static int gdev_mmap(struct file *filp, struct vm_area_struct *vma)
 {
     void *buf;
+    int ret;
     uint32_t size = vma->vm_end - vma->vm_start;
     unsigned long start = vma->vm_start;
     HERE;
@@ -172,9 +186,14 @@ static int gdev_mmap(struct file *filp, struct vm_area_struct *vma)
         /* loop over all pages, map it page individually */
         while (size > 0) {
             pfn = vmalloc_to_pfn(vmalloc_area_ptr);
+            pr_info("remap_pfn_range for pfn %lx at addr %lx\n",
+                    pfn, start);
             ret = remap_pfn_range(vma, start, pfn, PAGE_SIZE, PAGE_SHARED);
-            if (ret < 0)
+            if (ret < 0) {
+                pr_info("remap_pfn_range failed with %d\n", ret);
                 return ret;
+            }
+
             start += PAGE_SIZE;
             vmalloc_area_ptr += PAGE_SIZE;
             size -= PAGE_SIZE;
@@ -183,11 +202,19 @@ static int gdev_mmap(struct file *filp, struct vm_area_struct *vma)
         return 0;
     } else {
         unsigned long pfn;
-        if (virt_addr_valid(buf))
+        if (virt_addr_valid(buf)) {
             pfn = virt_to_phys(buf) >> PAGE_SHIFT;
-        else
+        }
+        else{
             pfn = vmalloc_to_pfn(buf);
-        return remap_pfn_range(vma, start, pfn, size, PAGE_SHARED);
+        }
+        pr_info("remap_pfn_range for pfn %lx at addr %lx\n",
+                pfn, start);
+        ret =  remap_pfn_range(vma, start, pfn, size, PAGE_SHARED);
+        if (ret < 0){
+            pr_info("remap_pfn_range failed with %d\n", ret);
+        }
+        return ret;
     }
 }
 

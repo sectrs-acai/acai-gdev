@@ -228,10 +228,17 @@ int cuda_test_madd_host(unsigned int n, char *path)
 
 
 	/* Read back */
+    int success = 1;
 	for (i = 0; i < n; i++) {
 		idx = i*n;
 		for(j = 0; j < n; j++) {			
-			dummy_c = c_buf[idx++];
+			dummy_c = c_buf[idx];
+            if (c_buf[idx] != a_buf[idx] + b_buf[idx]) {
+                printf("mismatch: %d = c[%d] != a[%d] + b[%d] = %d + %d = %d\n",
+                       c_buf[idx], idx, idx, idx, a_buf[idx], b_buf[idx], a_buf[idx] + b_buf[idx]);
+                success = 0;
+            }
+            idx++;
 		}
 	}
 
@@ -309,9 +316,10 @@ int cuda_test_madd_host(unsigned int n, char *path)
 	printf("DataRead: %f\n", data_read);
 	printf("Close: %f\n", close_gpu);
 	printf("Total: %f\n", total);
+    printf("success: %d\n", success);
 
 
-	return 0;
+	return !success;
 }
 
 

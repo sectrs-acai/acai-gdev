@@ -37,7 +37,7 @@ struct __attribute__((__packed__)) pin_pages_struct
     struct faultdata_page_chunk page_chunks[0];
 };
 
-static inline void fh_memcpy_escape_buf(
+static inline int fh_memcpy_escape_buf(
         fh_ctx_t *fh_ctx,
         void *target,
         void *src,
@@ -45,13 +45,15 @@ static inline void fh_memcpy_escape_buf(
         unsigned int header_size)
 {
     unsigned long tot_copy = header_size + size + sizeof(struct faultdata_struct);
-    memcpy(target, src, size);
-
     if (tot_copy > fh_ctx->escape_size)
     {
         pr_info("memcpy escape buf overflow\n");
         pr_info("escape buf: %ld, copy: %ld\n", fh_ctx->escape_size, tot_copy);
         BUG();
+        return -ENOMEM;
+    } else {
+        memcpy(target, src, size);
+        return 0;
     }
 }
 

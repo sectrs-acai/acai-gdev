@@ -117,6 +117,7 @@ int fh_init(fh_ctx_t **ret_fh_ctx,
             unsigned long escape_size)
 {
     int ret = 0;
+    struct fh_action_setup *escape;
     fh_ctx_t *fh_ctx = kmalloc(sizeof(fh_ctx_t), GFP_KERNEL);
     if (fh_ctx == NULL)
     {
@@ -153,7 +154,14 @@ int fh_init(fh_ctx_t **ret_fh_ctx,
     pr_info("%lx=%lx\n", (unsigned long) p, *p);
 
     fd_data_lock(fh_ctx);
+    escape = (struct fh_action_setup *) &fh_ctx->fh_escape_data->data;
+    memset(escape, 0, sizeof(struct fh_action_setup));
     fh_do_escape(fh_ctx, FH_ACTION_SETUP);
+    if (escape->buffer_limit > 0) {
+        pr_info("Escape Buffer Limit: %lx\n", escape->buffer_limit);
+        fh_ctx->escape_size = escape->buffer_limit;
+    }
+
     fd_data_unlock(fh_ctx);
 
     // TODO: BEAN
@@ -178,7 +186,7 @@ int fh_fop_open(fh_ctx_t *fh_ctx,
                 struct file *file,
                 void *private_data)
 {
-    #define buf_size 256
+    #define buf_size 120
     char buf[buf_size];
     char* dev_name;
     int ret;
