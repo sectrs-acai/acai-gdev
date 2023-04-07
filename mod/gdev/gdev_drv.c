@@ -78,7 +78,7 @@ static struct cdev *cdevs; /* character devices for virtual devices */
 int gdev_minor_init(int physid)
 {
 	int i, j;
-	struct drm_device *drm;
+	struct drm_device *drm = NULL;
 
 	if (gdev_drv_getdrm(physid, &drm)) {
 		GDEV_PRINT("Could not find device %d\n", physid);
