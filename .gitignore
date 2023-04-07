@@ -14,9 +14,9 @@ release
 *.cmd
 /cuda/build/
 /mod/gdev/compile_commands.json
-/mod_stub/gdev/Module.symvers
-/mod_stub/gdev/gdev_stub.ko
-/mod_stub/gdev/modules.order
+/mod/gdev/Module.symvers
+/mod/gdev/gdev_stub.ko
+/mod/gdev/modules.order
 /lib/kernel/libgdev.so
 /lib/kernel/libgdev.so.1
 /lib/kernel/libgdev.so.1.0.0
