@@ -26,3 +26,6 @@ release
 .idea/
 *.d
 /tmp/
+/lib/kernel/libgdev.a
+/mod/gdev/gdev_stub.mod.c
+/lib/kernel/lib64
