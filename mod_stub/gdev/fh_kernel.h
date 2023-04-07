@@ -109,36 +109,9 @@ int fh_do_escape(fh_ctx_t *fh_ctx, int action);
 int fh_fop_open(fh_ctx_t *fh_ctx, struct inode *inode, struct file *file,
                 void *private_data);
 
-ssize_t fh_fop_read(fh_ctx_t *fh_ctx,
-                    struct file *fp,
-                    char __user *buf,
-                    size_t count,
-                    loff_t *pos);
-
-ssize_t fh_fop_write(fh_ctx_t *fh_ctx,
-                     struct file *file,
-                     const char __user *buf,
-                     size_t count,
-                     loff_t *pos);
-
 int fh_fop_close(fh_ctx_t *fh_ctx,
                  struct inode *dev_node,
                  struct file *filep);
-
-int fh_fop_mmap(fh_ctx_t *fh_ctx,
-                struct file *file,
-                struct vm_area_struct *vma);
-
-
-int fh_pin_pages(fh_ctx_t *fh_ctx,
-                 const char __user *buf,
-                 size_t count,
-                 struct pin_pages_struct **ret_pages);
-
-int fh_unpin_pages(fh_ctx_t *fh_ctx,
-                   struct pin_pages_struct *pinned,
-                   int do_free,
-                   bool do_write);
 
 inline unsigned long fh_get_page_count(fh_ctx_t *fh_ctx,
                                        const char __user *buf,

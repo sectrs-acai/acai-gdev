@@ -3,7 +3,7 @@ include API.mk
 CC=$(CROSS_COMPILE)gcc
 TARGET		= libucuda
 CUDUMP		= cudump
-GDEVDIR		= /usr/local/gdev
+GDEVDIR		?= /usr/local/gdev
 CFLAGS		= -O3 -Wall
 CFLAGS_I    = -I../../common -I../../util
 LDFLAGS		= -L $(GDEVDIR)/lib64 -lgdev -lrt -Wl,-Bsymbolic
@@ -109,10 +109,10 @@ $(HYDRAZINE_OBJS):
 install:
 	@if test ! -d $(DESTDIR)/$(GDEVDIR)/bin ; then mkdir -p $(DESTDIR)/$(GDEVDIR)/bin ; fi ;
 	@if test ! -d $(DESTDIR)/$(GDEVDIR)/lib64 ; then mkdir -p $(DESTDIR)/$(GDEVDIR)/lib64 ; fi ;
-	@if test ! -d $(DESTDIR)/$(GDEVDIR)/include ; then mkdir -p $(DESTDIR)/$(GDEVDIR)/include ; fi ; cp -f ./$(CUDUMP) $(DESTDIR)/$(GDEVDIR)/bin/
+	@if test ! -d $(DESTDIR)/$(GDEVDIR)/include ; then mkdir -p $(DESTDIR)/$(GDEVDIR)/include ; fi ; cp -f ./$(CUDUMP) $(DESTDIR)/$(GDEVDIR)/bin/ || true
 	cp -f ./$(TARGET).so.1.0.0 $(DESTDIR)/$(GDEVDIR)/lib64/
-	ln -sf $(GDEVDIR)/lib64/$(TARGET).so.1.0.0 $(DESTDIR)/$(GDEVDIR)/lib64/$(TARGET).so.1
-	ln -sf $(GDEVDIR)/lib64/$(TARGET).so.1 $(DESTDIR)/$(GDEVDIR)/lib64/$(TARGET).so
+	ln --relative -sf $(GDEVDIR)/lib64/$(TARGET).so.1.0.0 $(DESTDIR)/$(GDEVDIR)/lib64/$(TARGET).so.1
+	ln --relative -sf $(GDEVDIR)/lib64/$(TARGET).so.1 $(DESTDIR)/$(GDEVDIR)/lib64/$(TARGET).so
 	cp -f ./cuda.h $(DESTDIR)/$(GDEVDIR)/include
 
 uninstall:

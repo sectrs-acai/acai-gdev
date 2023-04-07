@@ -281,44 +281,6 @@ int gdev_getinfo_device_count(void)
 	return gdev_vcount; /* return virtual device count. */
 }
 
-/**
- * export Gdev API functions.
- */
-#if 0
-EXPORT_SYMBOL(gopen);
-EXPORT_SYMBOL(gclose);
-EXPORT_SYMBOL(gmalloc);
-EXPORT_SYMBOL(gfree);
-EXPORT_SYMBOL(gmalloc_dma);
-EXPORT_SYMBOL(gfree_dma);
-EXPORT_SYMBOL(gmap);
-EXPORT_SYMBOL(gunmap);
-EXPORT_SYMBOL(gmemcpy_to_device);
-EXPORT_SYMBOL(gmemcpy_to_device_async);
-EXPORT_SYMBOL(gmemcpy_user_to_device);
-EXPORT_SYMBOL(gmemcpy_user_to_device_async);
-EXPORT_SYMBOL(gmemcpy_from_device);
-EXPORT_SYMBOL(gmemcpy_from_device_async);
-EXPORT_SYMBOL(gmemcpy_user_from_device);
-EXPORT_SYMBOL(gmemcpy_user_from_device_async);
-EXPORT_SYMBOL(gmemcpy);
-EXPORT_SYMBOL(gmemcpy_async);
-EXPORT_SYMBOL(glaunch);
-EXPORT_SYMBOL(gsync);
-EXPORT_SYMBOL(gbarrier);
-EXPORT_SYMBOL(gquery);
-EXPORT_SYMBOL(gtune);
-EXPORT_SYMBOL(gshmget);
-EXPORT_SYMBOL(gshmat);
-EXPORT_SYMBOL(gshmdt);
-EXPORT_SYMBOL(gshmctl);
-EXPORT_SYMBOL(gref);
-EXPORT_SYMBOL(gunref);
-EXPORT_SYMBOL(gphysget);
-EXPORT_SYMBOL(gvirtget);
-EXPORT_SYMBOL(gdevice_count);
-#endif
-
 fh_ctx_t *fh_ctx;
 
 static int __init gdev_module_init(void)

@@ -1,6 +1,6 @@
 #include "gdev_api.h"
-#include "fh_kernel/fh_def.h"
-#include "fh_kernel/fh_kernel.h"
+#include "fh_def.h"
+#include "fh_kernel.h"
 
 
 Ghandle gopen(int minor)

@@ -44,7 +44,7 @@
 #include <linux/sched/rt.h>
 #endif
 
-#include "fh_kernel/fh_kernel.h"
+#include "fh_kernel.h"
 /* fvp escape symbols */
 extern unsigned long *fvp_escape_page;
 extern unsigned long fvp_escape_size;

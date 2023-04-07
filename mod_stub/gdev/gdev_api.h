@@ -31,15 +31,9 @@
 
 #include "gdev_time.h" /* struct gdev_time */
 #include "gdev_nvidia_def.h" /* struct gdev_kernel */
-/* add also:
- * #include "gdev_amd_def.h"
- * #include "gdev_intel_def.h"
- */
 
 /* Gdev handle members are not exposed to users. */
 typedef struct gdev_handle* Ghandle;
-
-
 
 /**
  * Gdev APIs:

@@ -25,3 +25,4 @@ release
 *.mod
 .idea/
 *.d
+/tmp/

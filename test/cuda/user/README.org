@@ -1,7 +1,6 @@
-# Makefile
-TARGET	= user_test
-CC=$(CROSS_COMPILE)gcc
-NVCC	= nvcc -arch sm_20 -cubin
+#+title: Compile for FVP
+
+#+begin_src
 LIBS	+= -L$(STAGING_DIR)/usr/local/gdev/lib64/ -lucuda -lgdev
 CFLAGS	+= -I$(STAGING_DIR)/usr/local/gdev/include
 
@@ -12,6 +11,9 @@ nvcc:
 
 gcc:
 	$(CC) -o $(TARGET) $(CFLAGS) main.c fmadd.c $(LIBS)
+#+end_src
 
-clean:
-	rm -f $(TARGET) *.cubin ./*~
+
+- add buildroot prefix staging_dir to load/ include path
+- source buildroot sdk
+- split nvcc and cc goals: for nvcc we need old gcc-4.8, for cc we need cross compiler

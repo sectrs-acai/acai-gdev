@@ -37,7 +37,6 @@ struct gdev_handle {
     struct list_head mmap_head;
 };
 
-
 struct mmap_node {
     struct list_head list;
     unsigned long k_buffer; /* kernel heap address that points to device mem */
@@ -59,18 +58,12 @@ int gdev_ioctl_gphysget(struct file *filp, Ghandle h, unsigned long arg);
 int gdev_ioctl_gvirtget(struct file *filp, Ghandle h, unsigned long arg);
 
 int gdev_ioctl_get_handle(Ghandle handle, unsigned long arg);
-
-
-
 int gdev_ioctl_gmap(Ghandle h, unsigned long arg);
 int gdev_ioctl_gunmap(Ghandle h, unsigned long arg);
-
 int gdev_ioctl_gmemcpy_to_device_async(Ghandle h, unsigned long arg);
 int gdev_ioctl_gmemcpy_from_device_async(Ghandle h, unsigned long arg);
 int gdev_ioctl_gmemcpy(Ghandle h, unsigned long arg);
 int gdev_ioctl_gmemcpy_async(Ghandle h, unsigned long arg);
-
-
 int gdev_ioctl_gshmget(Ghandle h, unsigned long arg);
 int gdev_ioctl_gshmat(Ghandle h, unsigned long arg);
 int gdev_ioctl_gshmdt(Ghandle h, unsigned long arg);

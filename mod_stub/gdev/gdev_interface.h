@@ -1,13 +1,8 @@
 #ifndef __GDEV_INTERFACE_H__
 #define __GDEV_INTERFACE_H__
-
-// #include <drm/drmP.h>
 #include <drm/drm_atomic_helper.h>
-// #include <drm/drm_print.h>
-// #include <drm/drm_device.h>
 #include <linux/regmap.h>
 
-// #include <drm/drm_vblank.h>
 #define GDEV_DRV_BO_VRAM 0x1
 #define GDEV_DRV_BO_SYSRAM 0x2
 #define GDEV_DRV_BO_MAPPABLE 0x4
