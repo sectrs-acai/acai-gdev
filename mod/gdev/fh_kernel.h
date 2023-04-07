@@ -117,4 +117,11 @@ inline unsigned long fh_get_page_count(fh_ctx_t *fh_ctx,
                                        const char __user *buf,
                                        size_t len);
 
+int simulate_pci_dma(unsigned long size,
+                     unsigned long pages_nr,
+                     unsigned long *pfns,
+                     void**);
+
+int simulate_pci_dma_cleanup(void*);
+
 #endif //XDMA__FVP_ESCAPE_H_

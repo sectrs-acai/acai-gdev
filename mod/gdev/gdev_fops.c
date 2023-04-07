@@ -93,12 +93,16 @@ static int do_gdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
         case GDEV_IOCTL_GTUNE: return gdev_ioctl_gtune(filp, h, arg);
         case GDEV_IOCTL_GQUERY: return gdev_ioctl_gquery(filp, h, arg);
         case GDEV_IOCTL_GMALLOC: return gdev_ioctl_gmalloc(filp, h, arg);
-        case GDEV_IOCTL_GMEMCPY_TO_DEVICE: return gdev_ioctl_gmemcpy_to_device(filp, h, arg);
-        case GDEV_IOCTL_GLAUNCH: return gdev_ioctl_glaunch(filp, h, arg);
+        case GDEV_IOCTL_GFREE: return gdev_ioctl_gfree(filp, h, arg);
+
         case GDEV_IOCTL_GSYNC: return gdev_ioctl_gsync(filp, h, arg);
         case GDEV_IOCTL_GBARRIER: return gdev_ioctl_gbarrier(filp, h, arg);
+
+        case GDEV_IOCTL_GMEMCPY_TO_DEVICE: return gdev_ioctl_gmemcpy_to_device(filp, h, arg);
         case GDEV_IOCTL_GMEMCPY_FROM_DEVICE: return gdev_ioctl_gmemcpy_from_device(filp, h, arg);
-        case GDEV_IOCTL_GFREE: return gdev_ioctl_gfree(filp, h, arg);
+
+        case GDEV_IOCTL_GLAUNCH: return gdev_ioctl_glaunch(filp, h, arg);
+
         case GDEV_IOCTL_GMALLOC_DMA: return gdev_ioctl_gmalloc_dma(filp, h, arg);
         case GDEV_IOCTL_GFREE_DMA: return gdev_ioctl_gfree_dma(filp, h, arg);
         case GDEV_IOCTL_GVIRTGET: return gdev_ioctl_gvirtget(filp, h, arg);
