@@ -35,7 +35,7 @@ uninstall:
 	rm -f $(GDEVDIR)/include/gdev*.h
 
 clean:
-	rm -f $(TARGET).so.* $(OBJS) $(ZOMBIE) $(TARGET).a
+	rm -f $(TARGET).so.* $(OBJS) $(ZOMBIE) $(TARGET).a rm -f ../../common/*.o ../../util/*.o
 
 echo:
 	@echo ---------------------------------------------------------------
