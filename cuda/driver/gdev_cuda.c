@@ -156,8 +156,10 @@ static void cubin_func_skip(char **pos, section_entry_t *e)
 
 static void cubin_func_unknown(char **pos, section_entry_t *e)
 {
+    #if 0
 	GDEV_PRINT("/* nv.info: unknown entry type: 0x%.4x, size=0x%x */\n",
 			   e->type, e->size);
+    #endif
 	cubin_func_skip(pos, e);
 }
 

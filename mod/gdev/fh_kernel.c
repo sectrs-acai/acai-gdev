@@ -17,6 +17,7 @@
 #include "fh_kernel.h"
 
 #define HERE pr_info("%s/%s: %d\n", __FILE__, __FUNCTION__, __LINE__)
+#define pr_info_debug
 
 #if defined(__x86_64__) || defined(_M_X64)
 #define fh_flush \
@@ -279,7 +280,7 @@ int simulate_pci_dma(unsigned long size,
     struct scatterlist *sg;
     struct page *page;
 
-    pr_info("simulating pci dma access...\n");
+    pr_info_debug("simulating pci dma access...\n");
     sgt = kmalloc(sizeof(struct sg_table), GFP_KERNEL);
     if (sgt == NULL) {
         pr_err("sgl OOM.\n");
@@ -292,12 +293,12 @@ int simulate_pci_dma(unsigned long size,
     sg = sgt->sgl;
     nbytes_left = size;
     for (i = 0; i < pages_nr; i++, sg = sg_next(sg)) {
-        pr_info("%d pfn: %lx\n", i, pfns[i]);
         page = pfn_to_page(pfns[i]);
         offset = 0;
         nbytes = min(PAGE_SIZE, nbytes_left);
         #if 0
-        pr_info("sg_set_page(pages[%d], %x, %x\n", i, nbytes, offset);
+        pr_info_debug("%d pfn: %lx\n", i, pfns[i]);
+        pr_info_debug("sg_set_page(pages[%d], %x, %x\n", i, nbytes, offset);
         #endif
         sg_set_page(sg, page, nbytes, offset);
         nbytes_left -= PAGE_SIZE;
