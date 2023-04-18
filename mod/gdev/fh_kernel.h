@@ -7,6 +7,7 @@
 #include <linux/errno.h>
 #include "fh_def.h"
 #include <linux/fs.h>
+#include "cca_benchmark.h"
 
 #define fh_print(fmt, ...) \
     printk("[fh] "fmt, ##__VA_ARGS__)

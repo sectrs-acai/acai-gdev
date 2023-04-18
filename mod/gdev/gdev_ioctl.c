@@ -6,7 +6,7 @@
 #include "fh_def.h"
 
 #include <linux/list.h>
-
+#include "cca_benchmark.h"
 #define pr_info_debug
 
 static struct mmap_node *mmap_node_get_by_kaddr(Ghandle handle, unsigned long kaddr)
@@ -114,6 +114,11 @@ static int signalize_sgl_map(unsigned long gdev_cmd,
             unsigned long size = p->req.size;
             unsigned long pages_nr = p->src_buf_pfn_num;
             unsigned long *pfns = (unsigned long*) &p->src_buf_pfn;
+            /*
+             * benchmark marker
+             * # of dma reads
+             */
+            CCA_MARKER_DMA_PAGE_READ(pages_nr);
             simulate_pci_dma(size, pages_nr, pfns, NULL);
             break;
         }
@@ -122,6 +127,11 @@ static int signalize_sgl_map(unsigned long gdev_cmd,
             unsigned long size = p->req.size;
             unsigned long pages_nr = p->dest_buf_pfn_num;
             unsigned long *pfns = (unsigned long*) &p->dest_buf_pfn;
+            /*
+             * benchmark marker
+             * # of dma writes
+             */
+            CCA_MARKER_DMA_PAGE_WRITE(pages_nr);
             simulate_pci_dma(size, pages_nr, pfns, NULL);
             break;
         }
@@ -130,6 +140,11 @@ static int signalize_sgl_map(unsigned long gdev_cmd,
             unsigned long size = p->req.size;
             unsigned long pages_nr = p->buf_pfn_num;
             unsigned long *pfns = (unsigned long*) &p->buf_pfn;
+            /*
+             * benchmark marker
+             * # of pages allocated for mmap
+             */
+            CCA_MARKER_MMAP_PAGE(pages_nr);
             simulate_pci_dma(size, pages_nr, pfns, NULL);
             break;
         }
@@ -149,8 +164,23 @@ static int signalize_sgl_map(unsigned long gdev_cmd,
                 return ret;
             }
             unsigned long size = payload_size;
+            /*
+             * benchmark marker
+             * # of dma page reads during launch
+             */
+            CCA_MARKER_DMA_PAGE_READ(pages_nr);
             simulate_pci_dma(size, pages_nr, pfns, NULL);
             vfree(pfns);
+            break;
+        }
+        case GDEV_IOCTL_GMALLOC: {
+            /*
+             * XXX: this is not a scatter gather list
+             *      but for benchmarking purpose we track number of pages allocated for dma
+             */
+            struct ioctl_malloc *p = (struct ioctl_malloc *) payload;
+            unsigned long pages_nr = DIV_ROUND_UP(p->req.size, PAGE_SIZE);
+            CCA_MARKER_DMA_PAGE_ALLOC(pages_nr);
             break;
         }
         default: {
