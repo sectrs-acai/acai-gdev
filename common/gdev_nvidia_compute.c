@@ -202,7 +202,6 @@ int gdev_poll(struct gdev_ctx *ctx, uint32_t seq, struct gdev_time *timeout)
 
 		/* relax polling after some time. */
 		if (gdev_time_ge(&time_elapse, &time_relax)) {
-            printf("sched: %d\n", seq);
             SCHED_YIELD();
         }
 
