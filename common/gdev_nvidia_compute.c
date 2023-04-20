@@ -199,6 +199,7 @@ int gdev_poll(struct gdev_ctx *ctx, uint32_t seq, struct gdev_time *timeout)
 		gdev_time_stamp(&time_now);
 		/* time_elapse = time_now - time_start */
 		gdev_time_sub(&time_elapse, &time_now, &time_start);
+
 		/* relax polling after some time. */
 		if (gdev_time_ge(&time_elapse, &time_relax))
 			SCHED_YIELD();
@@ -223,7 +224,6 @@ int gdev_barrier(struct gdev_ctx *ctx)
 	compute->membar(ctx);
 	compute->fence_write(ctx, GDEV_OP_COMPUTE, seq);
 	while (seq != compute->fence_read(ctx, seq)) {
-        GDEV_PRINT("gdev_barrier: seq != compute->fence_read(ctx, seq)");
     }
 	return 0;
 }

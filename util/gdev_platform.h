@@ -76,11 +76,20 @@
 #else
 #define FREE(x) memset(x, 0, sizeof(*x))
 #endif
+
+/*
+ * XXX: Do not yield but busy wait for benchmarks
+ */
+#define SCHED_YIELD()
+#if 0
 #ifdef SCHED_DEADLINE
 #define SCHED_YIELD() if (sched_getscheduler(getpid()) != SCHED_DEADLINE) sched_yield();
 #else
 #define SCHED_YIELD() sched_yield()
 #endif
+
+#endif
+
 #if (__GNUC__ * 100 + __GNUC_MINOR__ >= 404)
 #define MB() __sync_synchronize()
 #else
