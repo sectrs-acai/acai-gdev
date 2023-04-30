@@ -40,6 +40,7 @@ static int gdev_open(struct inode *inode, struct file *filp)
 {
     int ret = 0;
     struct gdev_handle *h = vmalloc(sizeof(struct gdev_handle));
+    CCA_MARKER_DRIVER_FOP_CALL /* benchmarking */
 
     if (h == NULL) {
         return -ENOMEM;
@@ -55,6 +56,8 @@ static int gdev_open(struct inode *inode, struct file *filp)
 static int gdev_release(struct inode *inode, struct file *filp)
 {
     int ret;
+    CCA_MARKER_DRIVER_FOP_CALL /* benchmarking */
+
     Ghandle handle = fh_fop_get_private_data(filp);
     if (handle == NULL) {
         fh_print("device not opened\n");
@@ -82,6 +85,7 @@ static int do_gdev_ioctl(struct file *filp, unsigned int cmd, unsigned long arg)
 #if 0
     GDEV_PRINT("Ioctl %ld %s.\n", cmd, debug_ioctl_cmd_name(cmd));
 #endif
+    CCA_MARKER_DRIVER_FOP_CALL /* benchmarking */
 
     Ghandle h = fh_fop_get_private_data(filp);
     if (h == NULL) {
@@ -152,7 +156,7 @@ static int gdev_mmap(struct file *filp, struct vm_area_struct *vma)
     int ret;
     uint32_t size = vma->vm_end - vma->vm_start;
     unsigned long start = vma->vm_start;
-    HERE;
+    CCA_MARKER_DRIVER_FOP_CALL /* benchmarking */
 
     if (vma->vm_pgoff == 0) {
         /*

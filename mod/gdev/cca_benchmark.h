@@ -4,6 +4,9 @@
 #define STR(s) #s
 #define CCA_MARKER(marker) __asm__ volatile("MOV XZR, " STR(marker))
 
+/* file operation call from userspace */
+#define CCA_MARKER_DRIVER_FOP_CALL CCA_MARKER(0x150);
+
 #define CCA_MARKER_DMA_PAGE_READ(pages_nr) \
 for(unsigned long i = 0; i < pages_nr; i ++) { \
 CCA_MARKER(0x100); \
