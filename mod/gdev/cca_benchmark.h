@@ -6,6 +6,7 @@
 
 /* file operation call from userspace */
 #define CCA_MARKER_DRIVER_FOP_CALL CCA_MARKER(0x150);
+#define CCA_MARKER_FH_ESCAPE CCA_MARKER(0x9A)
 
 #define CCA_MARKER_DMA_PAGE_READ(pages_nr) \
 for(unsigned long i = 0; i < pages_nr; i ++) { \

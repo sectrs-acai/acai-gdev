@@ -50,6 +50,18 @@ static bool (*_take_page_off_buddy)(struct page *page) = NULL;
 
 static bool (*_is_free_buddy_page)(struct page *page) = NULL;
 
+#include <linux/dma-mapping.h>
+
+/* XXX: when set to 0, we call monitor directly and do not use kprobe to intercept
+ * requires intercept module to be loaded before this module is loaded */
+#define INTERCEPT_MAP_SG 1
+
+int (*_devmem_delegate_mem_range_sgl)(
+    struct scatterlist *sg,
+    int nents_tot,
+    int do_delegate /* =1 do delete, 0 do undelegate */
+) = NULL;
+
 static int setup_lookup(void)
 {
     #ifdef KPROBE_KALLSYMS_LOOKUP
@@ -77,6 +89,17 @@ static int setup_lookup(void)
         pr_info("lookup failed _is_free_buddy_page\n");
         return -ENXIO;
     }
+    _devmem_delegate_mem_range_sgl = (void *) kallsyms_lookup_name("devmem_delegate_mem_range_sgl");
+    if (_devmem_delegate_mem_range_sgl == NULL) {
+        pr_info("lookup _devmem_delegate_mem_range_sgl is NULL\n");
+        pr_info("this is OK as long as no EL3 monitor interactions required\n");
+    }
+
+    pr_info("INTERCEPT_MAP_SG=%d\n", INTERCEPT_MAP_SG);
+    if (INTERCEPT_MAP_SG == 0 && _devmem_delegate_mem_range_sgl == NULL) {
+        pr_info("warning: INTERCEPT_MAP_SG=0 and _devmem_delegate_mem_range_sgl=NULL\n");
+    }
+
     return 0;
 }
 
@@ -90,6 +113,7 @@ int fh_do_escape(fh_ctx_t *fh_ctx, int action)
         pr_info("spin lock not held on escape!\n");
         BUG();
     }
+    CCA_MARKER_FH_ESCAPE;
 
     #if defined(__x86_64__) || defined(_M_X64)
     #else
@@ -253,8 +277,10 @@ int simulate_pci_dma_cleanup(void *data)
         memset(&dma_ops, 0, sizeof(struct dma_map_ops));
         dummy->dev.dma_ops = &dma_ops;
 
+    #if INTERCEPT_MAP_SG
         dma_unmap_sg(&dummy->dev, sgt->sgl, sgt->orig_nents,
                      0 /* bidirectional */);
+     #endif
         kfree(dummy);
     }
     #endif
@@ -263,6 +289,109 @@ int simulate_pci_dma_cleanup(void *data)
 
     return 0;
 }
+
+
+static int realm = 1;
+static int testengine = 0;
+static int delegate = 1;
+#include <linux/module.h>
+#include <linux/kernel.h>
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <asm/rsi_cmds.h>
+#include <linux/kprobes.h>
+#include <linux/dma-mapping.h>
+#include <linux/slab.h>
+#define debug_print(...) pr_info(__VA_ARGS__)
+
+int devmem_delegate_mem_range_device(
+    phys_addr_t addr,
+    unsigned long num_granules,
+    int do_delegate) {
+
+    int ret = 0;
+    unsigned long i, testengine_addr;
+
+    if (!delegate) {
+        return 0;
+    }
+
+    if (realm)
+    {
+        ret = rsi_set_addr_range_dev_mem(addr, do_delegate, num_granules);
+        if (ret != 0)
+        {
+            debug_print("rsi_set_addr_dev_mem delegate failed for %lx\n", addr);
+        }
+        if (testengine) {
+            /* XXX: we dont need testengine verify during benchmark */
+            for(i = 0; i < num_granules; i ++) {
+                testengine_addr = addr + i * PAGE_SIZE;
+                ret = rsi_trigger_testengine(testengine_addr, testengine_addr ,31);
+                if (ret != 0)
+                {
+                    pr_info("rsi_trigger_testengine failed for IPA:%lx and SID: %lx\n", addr, 31);
+                }
+                ret = rsi_trigger_testengine(testengine_addr,testengine_addr,31);
+                if (ret != 0)
+                {
+                    pr_info("rsi_trigger_testengine failed for IPA:%lx and SID: %lx | ret %lx\n",
+                            addr, 31, ret);
+                }
+            }
+        }
+    }else{
+        // map the pages here with the smmu driver code.
+        ret = _map_pages_from_sid(31, addr, addr, num_granules);
+    }
+    return ret;
+}
+
+#if 0
+int devmem_delegate_mem_range_sgl(
+    struct scatterlist *sg,
+    int nents_tot,
+    int do_delegate /* =1 do delete, 0 do undelegate */
+) {
+    struct scatterlist *sg_start;
+    unsigned long base;
+    unsigned long next;
+    unsigned long base_nents;
+    unsigned int j = 0;
+    sg_start = sg;
+
+    // pr_info("intercept sgl expliti\n");
+    /*
+     * XXX: TO further optimization this, we could also sort the sgl all together
+     */
+    while(sg != NULL) {
+        base = page_to_phys(sg_page(sg));
+        base_nents = 0;
+
+        do {
+            /*
+             * add entries if sg contains more than a page
+             */
+            for(j = 0; j < sg->length; j +=PAGE_SIZE) {
+                base_nents += 1;
+            }
+            /*
+             * add entries if next sg is contiguous to current
+             */
+            sg = sg_next(sg);
+            next = base + base_nents * PAGE_SIZE;
+        } while(sg != NULL && page_to_phys(sg_page(sg)) == next);
+
+        #if 0
+        if (base_nents > 1) {
+            pr_info("base %lx entr: %ld\n", base, base_nents);
+        }
+        #endif
+        devmem_delegate_mem_range_device(base, base_nents,  do_delegate);
+    }
+    return 0;
+}
+#endif
 
 /*
  * XXX: This simulatse dma communcation because we dont have a device yet
@@ -327,15 +456,25 @@ int simulate_pci_dma(unsigned long size,
          * if (WARN_ON_ONCE(!dev->dma_mask))
          *   return 0; // return here
          */
+        #if INTERCEPT_MAP_SG
         dma_map_sg(&dummy->dev, sgt->sgl, sgt->orig_nents,
                    0 /* bidirectional */);
+        #else
+        if (_devmem_delegate_mem_range_sgl != NULL) {
+            _devmem_delegate_mem_range_sgl(sgt->sgl, sgt->orig_nents, 1);
+        }
+        #endif
 
         kfree(dummy);
     }
+
+
     if (ret_sg_table) {
         *ret_sg_table = sgt;
     } else {
+        #if INTERCEPT_MAP_SG
         simulate_pci_dma_cleanup(sgt);
+        #endif
     }
     return 0;
 }
