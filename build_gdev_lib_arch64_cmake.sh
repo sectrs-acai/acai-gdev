@@ -26,16 +26,22 @@ ls -al $ASSETS_DIR/snapshots/aarch64-lib || true
 
 SRC_CUDA=$CUR_DIR/cuda
 cd $SRC_CUDA
-rm -rf build
-mkdir build
-cd build
 
-../configure
-../../common/autogen.sh
-make GDEVDIR=$SRC
-ln -s libucuda.so.1.0.0 libucuda.so || true
-ln -s libucuda.so.1.0.0 libucuda.so.1 || true
+source $CUR_DIR/../../../env.sh
 
-# copies assets to snapshot dir
-cp -rf *so* $ASSETS_DIR/snapshots/aarch64-lib || true
+TARGET=$CUR_DIR/build_cmake
+# rm -rf $TARGET
+
+cmake  -H. -B$TARGET \
+    -Ddriver=nouveau \
+    -Duser=ON \
+    -Druntime=ON \
+    -Dusched=OFF \
+    -Duse_as=OFF \
+    -DCMAKE_BUILD_TYPE=Release \
+    -Dgdev_dir=$SRC
+make -C $TARGET
+## copies assets to snapshot dir
+
+cp -rf $TARGET/*so* $ASSETS_DIR/snapshots/aarch64-lib || true
 ls -al $ASSETS_DIR/snapshots/aarch64-lib || true

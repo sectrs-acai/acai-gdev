@@ -1,4 +1,5 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.25.2)
+# CMAKE_MINIMUM_REQUIRED(VERSION 3.25.2)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.22.3)
 
 SET(CMAKE_C_FLAGS_RELEASE "-Wall -O2")
 SET(CMAKE_C_FLAGS_DEBUG "-g")
@@ -18,6 +19,8 @@ OPTION(usched "enable user mode scheduler(default off)" OFF)
 OPTION(use_as "use assembler(default off)" OFF)
 OPTION(use_llvm "use LLVM compiler(default off)" OFF)
 OPTION(use_open64 "use Open64(nvopencc) compiler(default off)" OFF)
+OPTION(cudump "build cudump" OFF)
+OPTION(gdev_dir "" /usr/local/gdev/lib64)
 
 MACRO(INCLUDE_DIRECTORY_IF_EXISTS DIR)
     IF(EXISTS "${DIR}/")
@@ -30,6 +33,8 @@ MACRO(LINK_DIRECTORY_IF_EXISTS DIR)
         LINK_DIRECTORIES(${DIR})
     endif()
 ENDMACRO()
+
+
 
 ## Generate gdev_autogen.h
 STRING(TOUPPER "${driver}" DRIVER_NAME)

@@ -4,8 +4,8 @@
 target='libucuda'
 
 # use Runtime API or not
-runtime='0'
-enablecubin='1'
+runtime='1'
+enablecubin='0'
 
 # parse the given options.
 for option

@@ -95,24 +95,32 @@ IF(runtime)
     ${CMAKE_THREAD_LIBS_INIT})
 
     MESSAGE("Use CUDA Runtime API")
+    MESSAGE(${gdev_dir})
 ELSE(runtime)
     MESSAGE("Not use CUDA Runtime API")
 ENDIF(runtime)
 
+link_directories(${gdev_dir})
+
+#
+# XXX: We dont build cudump binary
+#
+
 # include dir
-SET(gdev_inc /usr/local/gdev/include ./ libucuda kcuda ./runtime ${CMAKE_CURRENT_BINARY_DIR} cudump driver)
+# SET(gdev_inc /usr/local/gdev/include ./ libucuda kcuda ./runtime ${CMAKE_CURRENT_BINARY_DIR} cudump driver ./../util ./../common)
+SET(gdev_inc /usr/local/gdev/include ./ libucuda kcuda ./runtime ${CMAKE_CURRENT_BINARY_DIR} driver ./../util ./../common)
 
 SET(ucuda_install_headers driver/cuda.h )
 
 # execute
 INCLUDE_DIRECTORIES(gdev ${gdev_inc})
-INCLUDE_DIRECTORIES(cudump ${gdev_inc})
+#INCLUDE_DIRECTORIES(cudump ${gdev_inc})
 ADD_LIBRARY(ucuda SHARED ${ucuda_src})
-ADD_EXECUTABLE(cudump ${cudump_src})
+#ADD_EXECUTABLE(cudump ${cudump_src})
 
 SET_TARGET_PROPERTIES(ucuda PROPERTIES VERSION ${serial} SOVERSION ${soserial})
 INSTALL(TARGETS ucuda LIBRARY DESTINATION gdev/lib64)
-INSTALL(TARGETS cudump DESTINATION gdev/bin)
+# INSTALL(TARGETS cudump DESTINATION gdev/bin)
 TARGET_LINK_LIBRARIES(ucuda ${ucuda_lib})
 INSTALL(FILES ${ucuda_install_headers} DESTINATION gdev/include)
 
