@@ -330,8 +330,10 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 				} else
 					*pi = mp_count;
 			}
-			if (!*pi)
-				GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			if (!*pi) {
+                // GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+            }
+
 		}
 		break;
     	case CU_DEVICE_ATTRIBUTE_MAX_THREADS_PER_BLOCK:
@@ -344,7 +346,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 1024;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -359,7 +361,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 1024;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -373,7 +375,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 64;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -389,7 +391,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 2147483647;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -404,7 +406,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 65535;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -418,7 +420,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 49152;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -432,7 +434,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 65536;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -446,7 +448,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 32;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -460,7 +462,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 2147483647;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -476,7 +478,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 65536;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -490,7 +492,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 512;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -504,7 +506,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 1;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -518,7 +520,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 1;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -532,7 +534,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 0;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -546,7 +548,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 1;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -560,7 +562,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = CU_COMPUTEMODE_DEFAULT;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -575,7 +577,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 65536;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -591,7 +593,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 65536;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -609,7 +611,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 4096;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -624,7 +626,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 16384;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -638,7 +640,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 2048;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -652,7 +654,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 1;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -666,7 +668,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 1;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -680,7 +682,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 0;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -696,7 +698,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 2048;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -710,7 +712,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 1;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -724,7 +726,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 			*pi = 1;
 			break;
 		default:
-			GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
+			// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet\n");
 			break;
 		}
 		break;
@@ -828,7 +830,7 @@ CUresult cuDeviceGetAttribute(int *pi, CUdevice_attribute attrib, CUdevice dev)
 		*pi = 0; /* FIXME */
 		break;
 	default:
-		GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet(%d)\n", attrib);
+		// GDEV_PRINT("cuDeviceGetAttribute: Not Implemented Yet(%d)\n", attrib);
 		break;
 	}
 

@@ -3,8 +3,9 @@ SET(CMAKE_C_FLAGS_DEBUG "-g")
 SET(CMAKE_BUILD_TYPE Release)
 SET(CMAKE_C_FLAGS "-DGDEV_SCHED_DISABLED")
 
+
 EXECUTE_PROCESS(COMMAND ${CMAKE_C_COMPILER} -dumpversion
-                OUTPUT_VARIABLE GCC_VERSION)
+        OUTPUT_VARIABLE GCC_VERSION)
 if (GCC_VERSION VERSION_GREATER 4.7 OR GCC_VERSION VERSION_EQUAL 4.7)
     set(CMAKE_CXX_FLAGS "-std=c++11")
 else()
@@ -27,6 +28,7 @@ FIND_PACKAGE(BISON)
 ## CUDUMP
 FILE(GLOB cudump_src "cudump/*.c")
 SET(cudump_src ${cudump_src} driver/gdev_cuda.c )
+
 ## Driver API
 FILE(GLOB util_src "${PROJECT_SOURCE_DIR}/util/*.c")
 FILE(GLOB common_src "driver/*.c")
@@ -53,21 +55,21 @@ FILE(GLOB parser_src "runtime/ocelot/parser/implementation/*.cpp")
 FILE(GLOB transforms_src "runtime/ocelot/transforms/implementation/*.cpp")
 ### Ocelot all sources
 SET(ocelot_src
-    ${analysis_src}
-    ${api_src}
-    ${cuda_src}
-    ${executive_src}
-    ${ir_src}
-    ${parser_src}
-    ${transforms_src}
-)
+        ${analysis_src}
+        ${api_src}
+        ${cuda_src}
+        ${executive_src}
+        ${ir_src}
+        ${parser_src}
+        ${transforms_src}
+        )
 ### Hydrazine sources
 FILE(GLOB hydrazine_src "runtime/hydrazine/implementation/*.cpp")
 
 # select source
 SET(ucuda_src
-    ${ucuda_src} ${util_src} ${common_src} ${common_ext_src}
-    )
+        ${ucuda_src} ${util_src} ${common_src} ${common_ext_src}
+        )
 
 SET(ucuda_lib rt gdev)
 
@@ -78,21 +80,21 @@ IF(runtime)
     ADD_FLEX_BISON_DEPENDENCY(ptx ptxgrammar)
 
     SET(ucuda_src
-    ${ucuda_src}
-    ${ocelot_src}
-    ${hydrazine_src}
-    ${BISON_ptxgrammar_OUTPUTS}
-    ${FLEX_ptx_OUTPUTS}
-    )
+            ${ucuda_src}
+            ${ocelot_src}
+            ${hydrazine_src}
+            ${BISON_ptxgrammar_OUTPUTS}
+            ${FLEX_ptx_OUTPUTS}
+            )
 
     FIND_PACKAGE(Threads)
     SET(ucuda_lib
-    ${ucuda_lib}
-    dl
-    boost_system
-    boost_filesystem
-    boost_thread
-    ${CMAKE_THREAD_LIBS_INIT})
+            ${ucuda_lib}
+            dl
+            boost_system
+            boost_filesystem
+            boost_thread
+            ${CMAKE_THREAD_LIBS_INIT})
 
     MESSAGE("Use CUDA Runtime API")
     MESSAGE(${gdev_dir})
@@ -108,7 +110,8 @@ link_directories(${gdev_dir})
 
 # include dir
 # SET(gdev_inc /usr/local/gdev/include ./ libucuda kcuda ./runtime ${CMAKE_CURRENT_BINARY_DIR} cudump driver ./../util ./../common)
-SET(gdev_inc /usr/local/gdev/include ./ libucuda kcuda ./runtime ${CMAKE_CURRENT_BINARY_DIR} driver ./../util ./../common)
+
+SET(gdev_inc ${gdev_dir}/include ./ ./../util ./../common libucuda kcuda ./runtime ${CMAKE_CURRENT_BINARY_DIR} driver)
 
 SET(ucuda_install_headers driver/cuda.h )
 
@@ -119,11 +122,13 @@ ADD_LIBRARY(ucuda SHARED ${ucuda_src})
 #ADD_EXECUTABLE(cudump ${cudump_src})
 
 SET_TARGET_PROPERTIES(ucuda PROPERTIES VERSION ${serial} SOVERSION ${soserial})
-INSTALL(TARGETS ucuda LIBRARY DESTINATION gdev/lib64)
+INSTALL(TARGETS ucuda LIBRARY DESTINATION ${install_name}/lib64)
+
 # INSTALL(TARGETS cudump DESTINATION gdev/bin)
 TARGET_LINK_LIBRARIES(ucuda ${ucuda_lib})
-INSTALL(FILES ${ucuda_install_headers} DESTINATION gdev/include)
+INSTALL(FILES ${ucuda_install_headers} DESTINATION ${install_name}/include)
 
 ADD_LIBRARY(ucuda_static STATIC ${ucuda_src})
 TARGET_LINK_LIBRARIES(ucuda_static ${ucuda_lib})
-INSTALL(TARGETS ucuda_static LIBRARY DESTINATION gdev/lib64)
+INSTALL(TARGETS ucuda_static LIBRARY DESTINATION ${install_name}/lib64)
+
