@@ -1,6 +1,7 @@
 #!/bin/bash
 #
-# deprecated: use buildroot gdev-guest package recepie to build
+# deprecated: use buildroot gdev-guest package package to build
+# this builds gdev and cuda without runtime api
 #
 set -euo pipefail
 

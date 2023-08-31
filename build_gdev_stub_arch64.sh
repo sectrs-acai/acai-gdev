@@ -1,5 +1,8 @@
 #!/bin/bash
 set -euo pipefail
+#
+# this builds escape aware gdev stub driver for fvp
+#
 
 CUR_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 source $CUR_DIR/../../../scripts/env-aarch64.sh
