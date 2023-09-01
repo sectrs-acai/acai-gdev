@@ -2,6 +2,8 @@ SET(CMAKE_C_FLAGS_RELEASE "-Wall -O2")
 SET(CMAKE_C_FLAGS_DEBUG "-g")
 SET(CMAKE_BUILD_TYPE Release)
 SET(CMAKE_C_FLAGS "-DGDEV_SCHED_DISABLED")
+OPTION(install_name "name to distinguish between cuda-rt and cuda" ucuda)
+
 
 EXECUTE_PROCESS(COMMAND ${CMAKE_C_COMPILER} -dumpversion
                 OUTPUT_VARIABLE GCC_VERSION)
@@ -108,7 +110,7 @@ link_directories(${gdev_dir})
 
 # include dir
 # SET(gdev_inc /usr/local/gdev/include ./ libucuda kcuda ./runtime ${CMAKE_CURRENT_BINARY_DIR} cudump driver ./../util ./../common)
-SET(gdev_inc /usr/local/gdev/include ./ libucuda kcuda ./runtime ${CMAKE_CURRENT_BINARY_DIR} driver ./../util ./../common)
+SET(gdev_inc ${gdev_dir}/include ./ libucuda kcuda ./runtime ${CMAKE_CURRENT_BINARY_DIR} driver ./../util ./../common)
 
 SET(ucuda_install_headers driver/cuda.h )
 
@@ -119,11 +121,14 @@ ADD_LIBRARY(ucuda SHARED ${ucuda_src})
 #ADD_EXECUTABLE(cudump ${cudump_src})
 
 SET_TARGET_PROPERTIES(ucuda PROPERTIES VERSION ${serial} SOVERSION ${soserial})
-INSTALL(TARGETS ucuda LIBRARY DESTINATION gdev/lib64)
+INSTALL(TARGETS ucuda LIBRARY DESTINATION ${install_name}/lib64)
+
 # INSTALL(TARGETS cudump DESTINATION gdev/bin)
 TARGET_LINK_LIBRARIES(ucuda ${ucuda_lib})
-INSTALL(FILES ${ucuda_install_headers} DESTINATION gdev/include)
+INSTALL(FILES ${ucuda_install_headers} DESTINATION ${install_name}/include)
 
 ADD_LIBRARY(ucuda_static STATIC ${ucuda_src})
 TARGET_LINK_LIBRARIES(ucuda_static ${ucuda_lib})
-INSTALL(TARGETS ucuda_static LIBRARY DESTINATION gdev/lib64)
+INSTALL(TARGETS ucuda_static LIBRARY DESTINATION ${install_name}/lib64)
+
+MESSAGE("@bean: install name is ${install_name}")
