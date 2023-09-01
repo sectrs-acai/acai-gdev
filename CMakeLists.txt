@@ -18,6 +18,8 @@ OPTION(use_llvm "use LLVM compiler(default off)" OFF)
 OPTION(use_open64 "use Open64(nvopencc) compiler(default off)" OFF)
 OPTION(cudump "build cudump" OFF)
 
+ADD_DEFINITIONS("-Wno-narrowing")
+
 MACRO(INCLUDE_DIRECTORY_IF_EXISTS DIR)
     IF(EXISTS "${DIR}/")
         INCLUDE_DIRECTORIES(${DIR})
