@@ -12,6 +12,9 @@ else()
 endif()
 ADD_DEFINITIONS("-Wno-unused-but-set-variable")
 ADD_DEFINITIONS("-Wno-unused-result")
+ADD_DEFINITIONS("-Wno-narrowing")
+
+# SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
 
 SET(serial "1.0.0")
 SET(soserial "1")
