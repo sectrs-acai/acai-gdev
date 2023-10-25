@@ -33,7 +33,7 @@
 CUresult cuFuncGetAttribute
 (int *pi, CUfunction_attribute attrib, CUfunction hfunc) 
 {
-	GDEV_PRINT("cuFuncGetAttribute: Not Implemented Yet\n");
+	// GDEV_PRINT("cuFuncGetAttribute: not implemented Yet\n");
 	return CUDA_SUCCESS;
 }
 
